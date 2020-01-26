@@ -4,8 +4,8 @@
   "version": "0.1",
   "manifest_version": 2,
   "icons": {
-    "48": "assets/icons/icon_48.png",
-    "128": "assets/icons/icon_128.png"
+    "48": "assets/icons/tp-icon-48.png",
+    "128": "assets/icons/tp-icon-128.png"
   },
   "browser_action": {
     "default_title": "extension",
