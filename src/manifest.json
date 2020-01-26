@@ -23,7 +23,7 @@
   
   "content_scripts": [
         {
-          "matches": ["https://www.google.com/search*"],
+          "matches": ["https://www.google.com/search*", "https://www.google.fr/search*"],
           "js": ["inject.js"]
         }
     ],

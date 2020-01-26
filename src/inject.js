@@ -30,7 +30,7 @@ else console.log('not adding click');
 function showTp(e)
 {
 	queryString=document.getElementsByName("q")[0].value;
-	document.getElementById("tp_anchor").href="http://tp-webfront.test/search?query=" + queryString;
+	document.getElementById("tp_anchor").href="http://tp-webfront.test/search/web/pages?query=" + queryString;
 
 	// var query = document.getElementsByName("q");
 

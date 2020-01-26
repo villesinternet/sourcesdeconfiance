@@ -1,6 +1,9 @@
 # Extension Territoire Plus
 
 
+Ajoute un onglet Territoire Plus sur une page de résultats google.com ou google.fr.
+Le bouton permet de lancer la même requête que celle de Google dans TP.
+
 
 ### `npm run build`
 
