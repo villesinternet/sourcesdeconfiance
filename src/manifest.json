@@ -27,7 +27,12 @@
           "js": ["inject.js"]
         }
     ],
-  "permissions": ["http://tp-apifront.test/*", "http://tp-webfront.test/*"],
+  "permissions": [
+    "tabs",
+    "http://tp-apifront.test/*", 
+    "http://tp-webfront.test/*"
+
+  ],
 
   "web_accessible_resources": [
     "assets/icons/tp-icon-24.png"
