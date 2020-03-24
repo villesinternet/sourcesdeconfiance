@@ -1,40 +1,31 @@
 {
-  "name": "Territoire +",
-  "description": "A Vue.js web extension",
+  "name": "Confiance",
+  "description": "Sources de confiance",
   "version": "0.1",
   "manifest_version": 2,
   "icons": {
-    "48": "assets/icons/tp-icon-48.png",
-    "128": "assets/icons/tp-icon-128.png"
+    "48": "assets/icons/icon_48.png",
+    "128": "assets/icons/icon_128.png"
   },
   "browser_action": {
     "default_title": "extension",
     "default_popup": "popup/popup.html"
   },
   "background": {
-    "scripts": [
-      "background.js"
-    ]
+    "scripts": ["background.js"]
   },
   "options_ui": {
     "page": "options/options.html",
     "chrome_style": true
   },
-  
+
   "content_scripts": [
-        {
-          "matches": ["https://www.google.com/search*", "https://www.google.fr/search*"],
-          "js": ["inject.js"]
-        }
-    ],
-  "permissions": [
-    "tabs",
-    "http://tp-apifront.test/*", 
-    "http://tp-webfront.test/*"
-
+    {
+      "matches": ["https://www.google.com/search*", "https://www.google.fr/search*"],
+      "js": ["inject.js"]
+    }
   ],
+  "permissions": ["tabs"],
 
-  "web_accessible_resources": [
-    "assets/icons/tp-icon-24.png"
-  ]
+  "web_accessible_resources": ["assets/icons/tp-icon-24.png"]
 }
