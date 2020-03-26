@@ -24,7 +24,7 @@ window.addEventListener('load', function() {
   // console.log(resultslist);
 
   // fo each result, store id (from array index) and url (from href) in the resultjson array
-  for (var i = 0; i < resultslist.length - 1; i++) {
+  for (var i = 0; i < resultslist.length; i++) {
     var el = resultslist[i].getElementsByClassName('rc'); // test if result has expected child. prevents code from breaking when a special info box occurs.
     if (el.length > 0) {
       resultjson.push({
@@ -34,31 +34,50 @@ window.addEventListener('load', function() {
           .querySelector('.r')
           .querySelector('a').href,
       });
-      // console.log(i + "/" + resultslist.length + " > " + resultslist[i].querySelector('.rc').querySelector('.r').querySelector('a').href);
+      //console.log(i + "/" + resultslist.length + " > " + resultslist[i].querySelector('.rc').querySelector('.r').querySelector('a').href);
     }
   }
   console.log(resultjson);
 
-  // Tests - editition d'un résultat
-  resultslist[2]
-    .querySelector('.rc')
-    .querySelector('.r')
-    .querySelector('a').innerHTML += `<span title="Confiance : publication d'une entité publique" style="color:green;font-size:20px;">&nbsp; ✅
-     </span>
-     `;
-  resultslist[2]
-    .querySelector('.rc')
-    .querySelector('.r')
-    .querySelector('a').style.color = 'green';
+  // SIMULATION DU MODULE FILTRE
+  // fake filter with enriched resultjson as input and enrichedjson as output
+  var enrichedjson = resultjson;
+  for (var i = 0; i < resultjson.length; i++) {
+    if (enrichedjson[i].id == 0 || enrichedjson[i].id == 1 || enrichedjson[i].id == 2 || enrichedjson[i].id == 5) {
+      enrichedjson[i].trusted = true;
+    }
+  }
 
-  resultslist[3]
-    .querySelector('.rc')
-    .querySelector('.r')
-    .querySelector('a').innerHTML += `<span title="Confiance : article de presse" style="color:blue;font-size:20px;">&nbsp; 📰
-        </span>
-        `;
-  resultslist[2]
-    .querySelector('.rc')
-    .querySelector('.r')
-    .querySelector('a').style.color = '#249bee';
+  // parse enriched enrichedjson to set a 'trusted' class to corresponding elements
+  var firstNeutralResult = 0;
+  var firstNeutralResultFound = false;
+  for (var i = 0; i < enrichedjson.length; i++) {
+    if (enrichedjson[i].trusted == true) {
+      resultslist[enrichedjson[i].id].querySelector('.rc').classList.add('trusted');
+    } else {
+      if (firstNeutralResultFound == false) {
+        firstNeutralResult = enrichedjson[i].id;
+        firstNeutralResultFound = true;
+      }
+    }
+  }
+
+  // get all trusted nodes
+  var trustedresults = document.getElementsByClassName('trusted');
+
+  // identify first neutral or untrusted result
+  let parentDiv = document.getElementsByClassName('g')[0];
+  let firstChildNode = document.getElementsByClassName('g')[0].getElementsByClassName('rc')[firstNeutralResult];
+  console.log(parentDiv);
+  console.log(firstChildNode);
+  console.log('First Neutral Result : ' + firstNeutralResult + '(' + firstNeutralResultFound + ')');
+
+  // apply new style to trusted nodes
+  for (var i = 0; i < trustedresults.length; i++) {
+    trustedresults[i].style.backgroundColor = '#F4FEE9';
+    trustedresults[i].querySelector('.r').querySelector('a').style.color = '#249bee';
+    trustedresults[i].querySelector('.r').querySelector('a').marginBottom = '20px';
+    let newNode = trustedresults[i];
+    parentDiv.insertBefore(newNode, firstChildNode); // move the trusted result up the first neutral result
+  }
 });
