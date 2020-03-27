@@ -18,11 +18,10 @@ function showTp(e) {
 }
 
 window.addEventListener('load', function() {
-  // get SERP results
+  // MODULE GET SERP RESULTS
+  //--------------------------
   const resultslist = document.getElementsByClassName('g');
   var resultjson = [];
-  // console.log(resultslist);
-
   // fo each result, store id (from array index) and url (from href) in the resultjson array
   for (var i = 0; i < resultslist.length; i++) {
     var el = resultslist[i].getElementsByClassName('rc'); // test if result has expected child. prevents code from breaking when a special info box occurs.
@@ -34,12 +33,12 @@ window.addEventListener('load', function() {
           .querySelector('.r')
           .querySelector('a').href,
       });
-      //console.log(i + "/" + resultslist.length + " > " + resultslist[i].querySelector('.rc').querySelector('.r').querySelector('a').href);
     }
   }
-  console.log(resultjson);
+  console.log(resultjson); //This should be passed to the FILTER MODULE
 
-  // SIMULATION DU MODULE FILTRE
+  // MODULE FILTER (SIMULATION)
+  //--------------------------
   // fake filter with enriched resultjson as input and enrichedjson as output
   var enrichedjson = resultjson;
   for (var i = 0; i < resultjson.length; i++) {
@@ -47,37 +46,50 @@ window.addEventListener('load', function() {
       enrichedjson[i].trusted = true;
     }
   }
+  console.log(enrichedjson); //This should be the FILTER MODULE output
 
-  // parse enriched enrichedjson to set a 'trusted' class to corresponding elements
+  // MODULE HIGLIGHT
+  //--------------------------
+  // parse enrichedjson and apply new style and position to trusted results
   var firstNeutralResult = 0;
   var firstNeutralResultFound = false;
   for (var i = 0; i < enrichedjson.length; i++) {
+    // If result is trusted
     if (enrichedjson[i].trusted == true) {
-      resultslist[enrichedjson[i].id].querySelector('.rc').classList.add('trusted');
-    } else {
-      if (firstNeutralResultFound == false) {
-        firstNeutralResult = enrichedjson[i].id;
-        firstNeutralResultFound = true;
+      console.log(
+        'styling : ' +
+          resultslist[enrichedjson[i].id]
+            .querySelector('.rc')
+            .querySelector('.r')
+            .querySelector('a').href +
+          ' ; id = ' +
+          i
+      );
+      resultslist[enrichedjson[i].id].classList.add('trusted');
+      resultslist[enrichedjson[i].id].style.backgroundColor = '#F4FEE9';
+      resultslist[enrichedjson[i].id]
+        .querySelector('.rc')
+        .querySelector('.r')
+        .querySelector('a').style.color = '#249bee';
+      resultslist[enrichedjson[i].id]
+        .querySelector('.rc')
+        .querySelector('.r')
+        .querySelector('a').marginBottom = '20px';
+      // If this trusted result needs to be moved upwards
+      if (firstNeutralResultFound) {
+        let newNode = resultslist[enrichedjson[i].id];
+        parentDiv.insertBefore(newNode, firstChildNode);
       }
     }
-  }
-
-  // get all trusted nodes
-  var trustedresults = document.getElementsByClassName('trusted');
-
-  // identify first neutral or untrusted result
-  let parentDiv = document.getElementsByClassName('g')[0];
-  let firstChildNode = document.getElementsByClassName('g')[0].getElementsByClassName('rc')[firstNeutralResult];
-  console.log(parentDiv);
-  console.log(firstChildNode);
-  console.log('First Neutral Result : ' + firstNeutralResult + '(' + firstNeutralResultFound + ')');
-
-  // apply new style to trusted nodes
-  for (var i = 0; i < trustedresults.length; i++) {
-    trustedresults[i].style.backgroundColor = '#F4FEE9';
-    trustedresults[i].querySelector('.r').querySelector('a').style.color = '#249bee';
-    trustedresults[i].querySelector('.r').querySelector('a').marginBottom = '20px';
-    let newNode = trustedresults[i];
-    parentDiv.insertBefore(newNode, firstChildNode); // move the trusted result up the first neutral result
+    // If result is neutral
+    else if (firstNeutralResultFound == false) {
+      firstNeutralResult = enrichedjson[i].id;
+      firstNeutralResultFound = true;
+      var parentDiv = document.getElementById('rso');
+      var firstChildNode = document.getElementById('rso').getElementsByClassName('g')[firstNeutralResult];
+      console.log(parentDiv);
+      console.log(firstChildNode);
+      console.log('First Neutral Result : ' + firstNeutralResult + '(' + firstNeutralResultFound + ')');
+    }
   }
 });
