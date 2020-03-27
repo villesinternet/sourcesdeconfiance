@@ -17,9 +17,11 @@ function showTp(e) {
   console.log('query =', queryString);
 }
 
+// (MODULE 1) GET SERP RESULTS
+//----------------------------
+// Scrap the Search Engine Result Page and send resultjson to the filter module
+
 window.addEventListener('load', function() {
-  // MODULE GET SERP RESULTS
-  //--------------------------
   const resultslist = document.getElementsByClassName('g');
   var resultjson = [];
   // fo each result, store id (from array index) and url (from href) in the resultjson array
@@ -35,46 +37,45 @@ window.addEventListener('load', function() {
       });
     }
   }
-  console.log(resultjson); //This should be passed to the FILTER MODULE
 
-  // MODULE FILTER (SIMULATION)
-  //--------------------------
-  // fake filter with enriched resultjson as input and enrichedjson as output
-  var enrichedjson = resultjson;
-  for (var i = 0; i < resultjson.length; i++) {
-    if (enrichedjson[i].id == 0 || enrichedjson[i].id == 1 || enrichedjson[i].id == 2 || enrichedjson[i].id == 5) {
-      enrichedjson[i].trusted = true;
-    }
-  }
-  console.log(enrichedjson); //This should be the FILTER MODULE output
+  notifyBackgroundPage(resultjson);
+});
 
-  // MODULE HIGLIGHT
-  //--------------------------
-  // parse enrichedjson and apply new style and position to trusted results
+// (MODULE 2) FILTER
+//--------------------------
+// Send a single message to event listeners within the extension
+// Response will be processed in background.js and sent back through the handler
+function handleResponse(enrichedjson) {
+  console.log(`Launch the highlight !`);
+  highlight(enrichedjson);
+}
+
+function handleError(error) {
+  console.log(`Error: ${error}`);
+}
+
+function notifyBackgroundPage(json) {
+  var sending = browser.runtime.sendMessage(json);
+  console.log('json sent');
+  sending.then(handleResponse, handleError);
+}
+
+// (MODULE 3) HIGHLIGHT
+//-------------------------
+// Parse enrichedjson and apply new style and position to trusted results
+
+function highlight(enrichedjson) {
+  const resultslist = document.getElementsByClassName('g');
   var firstNeutralResult = 0;
   var firstNeutralResultFound = false;
   for (var i = 0; i < enrichedjson.length; i++) {
     // If result is trusted
     if (enrichedjson[i].trusted == true) {
-      console.log(
-        'styling : ' +
-          resultslist[enrichedjson[i].id]
-            .querySelector('.rc')
-            .querySelector('.r')
-            .querySelector('a').href +
-          ' ; id = ' +
-          i
-      );
-      resultslist[enrichedjson[i].id].classList.add('trusted');
-      resultslist[enrichedjson[i].id].style.backgroundColor = '#F4FEE9';
+      resultslist[enrichedjson[i].id].classList.add('trusted'); //apply .trusted class
       resultslist[enrichedjson[i].id]
         .querySelector('.rc')
         .querySelector('.r')
         .querySelector('a').style.color = '#249bee';
-      resultslist[enrichedjson[i].id]
-        .querySelector('.rc')
-        .querySelector('.r')
-        .querySelector('a').marginBottom = '20px';
       // If this trusted result needs to be moved upwards
       if (firstNeutralResultFound) {
         let newNode = resultslist[enrichedjson[i].id];
@@ -87,9 +88,22 @@ window.addEventListener('load', function() {
       firstNeutralResultFound = true;
       var parentDiv = document.getElementById('rso');
       var firstChildNode = document.getElementById('rso').getElementsByClassName('g')[firstNeutralResult];
-      console.log(parentDiv);
-      console.log(firstChildNode);
-      console.log('First Neutral Result : ' + firstNeutralResult + '(' + firstNeutralResultFound + ')');
+      //console.log('First Neutral Result : ' + firstNeutralResult + '(' + firstNeutralResultFound + ')');
     }
   }
-});
+
+  // CSS injection - Define style for .trusted class
+  var newstyles = `
+  .g.trusted {
+    border-left: solid #adff5c 5px;
+    margin-left: -10px;
+    padding-left: 10px;
+    background-color: #F4FEE9;
+  }
+  `;
+
+  var styleSheet = document.createElement('style');
+  styleSheet.type = 'text/css';
+  styleSheet.innerText = newstyles;
+  document.head.appendChild(styleSheet);
+}

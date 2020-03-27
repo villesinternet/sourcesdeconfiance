@@ -65,5 +65,10 @@
     "webpack": "^4.20.2",
     "webpack-cli": "^3.3.10",
     "webpack-extension-reloader": "^1.1.0"
+  },
+  "permissions": {
+    "cross-domain-content": [
+      "https://jsonplaceholder.typicode.com/*"
+    ]
   }
 }
