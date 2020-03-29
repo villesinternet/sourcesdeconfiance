@@ -1,5 +1,5 @@
 //import store from './store';
-// global.browser = require('webextension-polyfill');
+var browser = require('webextension-polyfill');
 
 // alert(`Hello ${store.getters.foo}!`);
 
@@ -33,14 +33,20 @@ function handleMessage(json, sender, sendResponse) {
   }
 
   // TESTING API CALL
-  var url = 'https://jsonplaceholder.typicode.com/posts/1'; //to be replaced by real API url.  + edit permission as well in package.json /!\
+  var testdata = ['http://www.adil95.org', 'http://www.notconfident.com', 'http://www.malware.com', 'missingprotocol.com', 'malformed_url'];
+
+  var testentry = JSON.stringify(testdata);
+
+  var url = 'http://vps656318.ovh.net/api/proof'; //to be replaced by real API url.  + edit permission as well in package.json /!\
   var request = new XMLHttpRequest();
-  request.open('GET', url, true); // Configure POST parameters with the real API - https://javascript.info/xmlhttprequest
+  request.open('POST', url, true); // Configure POST parameters with the real API - https://javascript.info/xmlhttprequest
+  request.setRequestHeader('Content-Type', 'text/plain');
   request.onload = function() {
+    //or onreadystatechange ?
     console.log(request.response);
     console.log(request.status);
   };
-  request.send();
+  request.send(testentry);
 
   sendResponse(enrichedjson); //to be replaced by real API response
 }

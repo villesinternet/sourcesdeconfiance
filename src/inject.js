@@ -1,3 +1,5 @@
+var browser = require('webextension-polyfill');
+
 // On insere un texte Confiance dans la toolbar
 document.getElementById('hdtb-msb').innerHTML += `<div id="tp_item" class="hdtb-mitem hdtb-imb" aria-hidden="true">
   		<a id="tp_anchor" class="q qs" href="#">

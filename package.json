@@ -25,8 +25,7 @@
     "axios": "^0.19.0",
     "vue": "^2.6.10",
     "vue-router": "^3.0.1",
-    "vuex": "^3.0.1",
-    "webextension-polyfill": "^0.3.1"
+    "vuex": "^3.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.1.2",
@@ -62,13 +61,14 @@
     "vue-loader": "^15.4.2",
     "vue-template-compiler": "^2.6.10",
     "web-ext-types": "^2.1.0",
+    "webextension-polyfill": "^0.3.1",
     "webpack": "^4.20.2",
     "webpack-cli": "^3.3.10",
     "webpack-extension-reloader": "^1.1.0"
   },
   "permissions": {
     "cross-domain-content": [
-      "https://jsonplaceholder.typicode.com/*"
+      "http://vps656318.ovh.net/api/*"
     ]
   }
 }
