@@ -1,7 +1,7 @@
 const webpack = require('webpack');
 const ejs = require('ejs');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
 const ExtensionReloader = require('webpack-extension-reloader');
 const { VueLoaderPlugin } = require('vue-loader');
 const { version } = require('./package.json');
@@ -73,7 +73,26 @@ const config = {
     new MiniCssExtractPlugin({
       filename: '[name].css',
     }),
-    new CopyWebpackPlugin([{ from: '../node_modules/webextension-polyfill/dist/browser-polyfill.js' }]),
+    new CopyPlugin([
+      { from: 'assets', to: 'assets', ignore: ['icon.xcf'] },
+      { from: 'popup/popup.html', to: 'popup/popup.html', transform: transformHtml },
+      { from: 'options/options.html', to: 'options/options.html', transform: transformHtml },
+      { from: '../node_modules/webextension-polyfill/dist/browser-polyfill.js', to: 'browser-polyfill.js' },
+      {
+        from: 'manifest.json',
+        to: 'manifest.json',
+        transform: content => {
+          const jsonContent = JSON.parse(content);
+          jsonContent.version = version;
+
+          if (config.mode === 'development') {
+            jsonContent['content_security_policy'] = "script-src 'self' 'unsafe-eval'; object-src 'self'";
+          }
+
+          return JSON.stringify(jsonContent, null, 2);
+        },
+      },
+    ]),
   ],
 };
 

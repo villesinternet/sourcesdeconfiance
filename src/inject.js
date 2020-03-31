@@ -25,6 +25,7 @@ function showTp(e) {
 
 window.addEventListener('load', function() {
   const resultslist = document.getElementsByClassName('g');
+  const querystring = document.getElementsByName('q')[0].value;
   var resultjson = [];
   // fo each result, store id (from array index) and url (from href) in the resultjson array
   for (var i = 0; i < resultslist.length; i++) {
@@ -40,7 +41,9 @@ window.addEventListener('load', function() {
     }
   }
 
-  notifyBackgroundPage(resultjson);
+  var requestjson = { request: querystring, results: resultjson, type: 'GET_SERP' };
+
+  notifyBackgroundPage(requestjson);
 });
 
 // (MODULE 2) FILTER
@@ -49,6 +52,7 @@ window.addEventListener('load', function() {
 // Response will be processed in background.js and sent back through the handler
 function handleResponse(enrichedjson) {
   console.log(`Launch the highlight !`);
+  console.log(enrichedjson);
   highlight(enrichedjson);
 }
 
@@ -72,12 +76,12 @@ function highlight(enrichedjson) {
   var firstNeutralResultFound = false;
   for (var i = 0; i < enrichedjson.length; i++) {
     // If result is trusted
-    if (enrichedjson[i].trusted == true) {
+    if (enrichedjson[i].status == 'trusted') {
       resultslist[enrichedjson[i].id].classList.add('trusted'); //apply .trusted class
       resultslist[enrichedjson[i].id]
         .querySelector('.rc')
         .querySelector('.r')
-        .querySelector('a').style.color = '#249bee';
+        .querySelector('a').style.color = '#44ba3a';
       // If this trusted result needs to be moved upwards
       if (firstNeutralResultFound) {
         let newNode = resultslist[enrichedjson[i].id];
@@ -90,17 +94,16 @@ function highlight(enrichedjson) {
       firstNeutralResultFound = true;
       var parentDiv = document.getElementById('rso');
       var firstChildNode = document.getElementById('rso').getElementsByClassName('g')[firstNeutralResult];
-      //console.log('First Neutral Result : ' + firstNeutralResult + '(' + firstNeutralResultFound + ')');
+      console.log('First Neutral Result : ' + firstNeutralResult + '(' + firstNeutralResultFound + ')');
     }
   }
 
   // CSS injection - Define style for .trusted class
   var newstyles = `
   .g.trusted {
-    border-left: solid #adff5c 5px;
+    border-left: solid #44ba3a 4px;
     margin-left: -10px;
     padding-left: 10px;
-    background-color: #F4FEE9;
   }
   `;
 
