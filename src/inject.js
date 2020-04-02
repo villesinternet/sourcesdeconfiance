@@ -53,7 +53,7 @@ window.addEventListener('load', function() {
 function handleResponse(enrichedjson) {
   console.log(`Launch the highlight !`);
   console.log(enrichedjson);
-  highlight(enrichedjson);
+  highlight2(enrichedjson);
 }
 
 function handleError(error) {
@@ -71,6 +71,7 @@ function notifyBackgroundPage(json) {
 // Parse enrichedjson and apply new style and position to trusted results
 
 function highlight(enrichedjson) {
+  //Cette version de highlight déplace les éléments en haut des résultas de recherche (et ne tient pas compte des publicités ou encadrés spéciaux)
   const resultslist = document.getElementsByClassName('g');
   var firstNeutralResult = 0;
   var firstNeutralResultFound = false;
@@ -78,10 +79,10 @@ function highlight(enrichedjson) {
     // If result is trusted
     if (enrichedjson[i].status == 'trusted') {
       resultslist[enrichedjson[i].id].classList.add('trusted'); //apply .trusted class
-      resultslist[enrichedjson[i].id]
+      /*  resultslist[enrichedjson[i].id]
         .querySelector('.rc')
         .querySelector('.r')
-        .querySelector('a').style.color = '#44ba3a';
+        .querySelector('cite').style.color = '#44ba3a';*/
       // If this trusted result needs to be moved upwards
       if (firstNeutralResultFound) {
         let newNode = resultslist[enrichedjson[i].id];
@@ -101,11 +102,158 @@ function highlight(enrichedjson) {
   // CSS injection - Define style for .trusted class
   var newstyles = `
   .g.trusted {
-    border-left: solid #44ba3a 4px;
+    border-left: solid #44ba3a 2px;
     margin-left: -10px;
     padding-left: 10px;
   }
+/*
+  .trusted cite {
+    color: #44ba3a;
+  }
+*/
+  .trusted cite:before {
+    content: " ✔️ ";
+    color: #44ba3a;
+
+  }
+
   `;
+
+  var styleSheet = document.createElement('style');
+  styleSheet.type = 'text/css';
+  styleSheet.innerText = newstyles;
+  document.head.appendChild(styleSheet);
+}
+
+function highlight2(enrichedjson) {
+  //Cette fonction déplacement les résultats de confiance tout en haut de page
+  const resultslist = document.getElementsByClassName('g');
+  var firstNeutralResult = 0;
+  var firstResultFound = false;
+  for (var i = 0; i < enrichedjson.length; i++) {
+    // If result is trusted
+    if (enrichedjson[i].status == 'trusted') {
+      resultslist[enrichedjson[i].id].classList.add('trustedtwo'); //apply .trusted class
+      resultslist[enrichedjson[i].id].classList.add('tooltip'); //apply .trusted class
+      /*  resultslist[enrichedjson[i].id]
+        .querySelector('.rc')
+        .querySelector('.r')
+        .querySelector('cite').style.color = '#44ba3a';*/
+      // If this trusted result needs to be moved upwards
+      var para = document.createElement('span');
+      para.classList.add('tooltiptext');
+      para.appendChild(document.createTextNode('Source de confiance '));
+      let newNode = resultslist[enrichedjson[i].id];
+      newNode.appendChild(para);
+
+      if (firstResultFound == false) {
+        var paratitle = document.createElement('div');
+        paratitle.classList.add('firsttitle');
+        paratitle.appendChild(document.createTextNode(''));
+        var parentDiv = document.getElementById('rso');
+        var firstChildNode = document.getElementById('rso').firstElementChild;
+        newNode.insertBefore(paratitle, newNode.firstElementChild);
+        parentDiv.insertBefore(newNode, firstChildNode);
+        firstResultFound = true;
+      }
+    }
+    // If result is neutral
+    else if (0) {
+      firstNeutralResult = enrichedjson[i].id;
+      firstNeutralResultFound = true;
+      var parentDiv = document.getElementById('rso');
+      //var firstChildNode = document.getElementById('rso').getElementsByClassName('g')[firstNeutralResult];
+      var firstChildNode = document.getElementById('rso').firstElementChild;
+      console.log('First Neutral Result : ' + firstNeutralResult + '(' + firstNeutralResultFound + ')');
+    }
+  }
+  var pictourl = browser.runtime.getURL('assets/icons/picto_sdc-24px.png');
+  // CSS injection - Define style for .trusted class
+  var newstyles = `
+    .g.trustedtwo {
+      padding: 16px 5px 5px 16px;
+      border: 1px solid #dfe1e5;
+      border-radius: 8px;
+      box-shadow: none;
+      width:630px;    }
+
+      .trustedtwo cite:after {
+        /*content: " | source de confiance ";*/
+        /*color: #44ba3a;*/
+        font-weight:bold;
+      }
+
+      .trustedtwo cite {
+        color: #44ba3a;
+      }
+
+      .trustedtwo:before {
+        content: " ";
+        color: #44ba3a;
+        width:24px;
+        height:24px;
+        display:block;
+        float:right;
+        margin-left:-15px;
+        margin-top:-17px;
+        background-image:url(${pictourl});
+      }
+
+/* First Title */
+.firsttitle {
+  color:#333;
+  margin-bottom:10px;
+  font-weight:bold;
+}
+
+      /* Tooltip container */
+.tooltip {
+ position: relative;
+ display: inline-block;
+}
+
+/* Tooltip text */
+.tooltip .tooltiptext {
+ visibility: hidden;
+ width: 120px;
+ background-color: #777;
+ color: #fff;
+ text-align: center;
+ padding: 5px 0;
+ border-radius: 6px;
+
+ /* Position the tooltip text */
+ position: absolute;
+ z-index: 1;
+ bottom: 101%;
+ left: 100%;
+ margin-left: -70px;
+
+ /* Fade in tooltip */
+ opacity: 0;
+ transition: opacity 0.3s;
+}
+
+/* Tooltip arrow */
+.tooltip .tooltiptext::after {
+ content: "";
+ position: absolute;
+ top: 100%;
+ left: 50%;
+ margin-left: -5px;
+ border-width: 5px;
+ border-style: solid;
+ border-color: #777 transparent transparent transparent;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip:hover .tooltiptext {
+ visibility: visible;
+ opacity: 1;
+}
+
+
+    `;
 
   var styleSheet = document.createElement('style');
   styleSheet.type = 'text/css';

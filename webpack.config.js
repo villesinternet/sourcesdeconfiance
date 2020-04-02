@@ -78,6 +78,7 @@ const config = {
       { from: 'popup/popup.html', to: 'popup/popup.html', transform: transformHtml },
       { from: 'options/options.html', to: 'options/options.html', transform: transformHtml },
       { from: '../node_modules/webextension-polyfill/dist/browser-polyfill.js', to: 'browser-polyfill.js' },
+      { from: '../node_modules/webextension-polyfill/dist/browser-polyfill.js.map', to: 'browser-polyfill.js.map' },
       {
         from: 'manifest.json',
         to: 'manifest.json',

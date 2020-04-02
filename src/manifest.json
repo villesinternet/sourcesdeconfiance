@@ -28,5 +28,5 @@
   ],
   "permissions": ["tabs"],
 
-  "web_accessible_resources": ["assets/icons/tp-icon-24.png"]
+  "web_accessible_resources": ["assets/icons/picto_sdc-24px.png", "assets/icons/picto_sdc-48px.png", "assets/icons/*.png"]
 }

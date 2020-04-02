@@ -47,27 +47,34 @@ function handleMessage(json, sender, sendResponse) {
       xhr.onerror = () => reject(xhr.statusText);
       xhr.send(JSON.stringify(json));
       //FOR API MANUAL TEST
-      //var testdata = {request:'test',results:[{"id":1,url:'http://www.legifrance.gouv.fr/'},{"id":1,url:'http://www.adil95.org'},{"id":2,url:'http://www.notconfident.com'},{"id":3,url:'http://www.malware.com'},{"id":4,url:'missingprotocol.com'},{"id":5,url:'malformed_url'}]};
+      //var testdata = {request:'test',results:[{"id":1,url:'http://www.legifrance.gouv.fr/'},{"id":1,url:'http://www.adil95.org'},{"id":2,url:'http://www.adil95.org/subpage.html'},{"id":3,url:'http://www.malware.com'},{"id":4,url:'missingprotocol.com'},{"id":5,url:'malformed_url'}]};
       //xhr.send(JSON.stringify(testdata));
     });
   }
 
-  /**
-    if(json.type == "GET_SERP FAKE") { //FAKING API RESPONSE (with a false promise and static trusted elements)
-      var enrichedjson = json.results;
-      for (var i = 0; i < json.results.length; i++) {
-      if (enrichedjson[i].id == 0 || enrichedjson[i].id == 1 || enrichedjson[i].id == 4 || enrichedjson[i].id == 7 || enrichedjson[i].id == 14 || enrichedjson[i].id == 15 || enrichedjson[i].id == 16) {
-          enrichedjson[i].status = "trusted";
-        }
+  if (json.type == 'GET_SERP FAKE') {
+    //FAKING API RESPONSE (with a false promise and static trusted elements)
+    var enrichedjson = json.results;
+    for (var i = 0; i < json.results.length; i++) {
+      if (
+        enrichedjson[i].id == 0 ||
+        enrichedjson[i].id == 1 ||
+        enrichedjson[i].id == 4 ||
+        enrichedjson[i].id == 7 ||
+        enrichedjson[i].id == 14 ||
+        enrichedjson[i].id == 15 ||
+        enrichedjson[i].id == 16
+      ) {
+        enrichedjson[i].status = 'trusted';
       }
-
-      return new Promise(resolve => {
-        setTimeout(() => {
-          resolve(enrichedjson);
-        }, 1000);
-      });
     }
-    */
+
+    return new Promise(resolve => {
+      setTimeout(() => {
+        resolve(enrichedjson);
+      }, 1000);
+    });
+  }
 }
 
 browser.runtime.onMessage.addListener(handleMessage);
