@@ -2,6 +2,10 @@
 
 Marque les résultats de recherche sur une page de résultats google.com ou google.fr pour visualiser les liens qui correspondent au référentiel de « Sources de confiance » de Villes Internet : 35000 sites publics nationaux et locaux, institutionnels et universitaires.
 
+### `npm install`
+
+Install dependencies from fresh download/clone
+
 ### `npm run build`
 
 Build the extension into `dist` folder for **production**.

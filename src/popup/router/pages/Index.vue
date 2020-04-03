@@ -2,8 +2,8 @@
   <div style="width:100%">
     <img class="logo" style="float:left;margin-top:40px;" src="/assets/icons/sdc-48.png" /><br /><br />
     <div id="centered" style="margin: auto; ">
-      L’association Villes Internet et son partenaire la Banque Française Mutualiste mettent à la disposition des acteurs publics la base de 35 000 « Sources de Confiance » : sites
-      publics nationaux et locaux, institutionnels et universitaires.
+      SOURCES DE CONFIANCE Un marqueur pour identifier les sites publics, institutionnels et universitaires dans les résultats de recherche, gratuit pour les acteurs publics et
+      tous ceux qui refusent la désinformation.
     </div>
 
     <div class="footer">
