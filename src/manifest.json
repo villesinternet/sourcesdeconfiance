@@ -4,9 +4,9 @@
   "version": "0.1",
   "manifest_version": 2,
   "icons": {
-    "24": "assets/icons/picto_sdc-24px.png",
-    "48": "assets/icons/picto_sdc-48px.png",
-    "128": "assets/icons/picto_sdc-128px.png"
+    "24": "assets/icons/sdc-24.png",
+    "48": "assets/icons/sdc-48.png",
+    "128": "assets/icons/sdc-128.png"
   },
   "browser_action": {
     "default_title": "Sources de confiance",
@@ -19,7 +19,6 @@
     "page": "options/options.html",
     "chrome_style": true
   },
-
   "content_scripts": [
     {
       "matches": ["https://www.google.com/search*", "https://www.google.fr/search*"],
@@ -27,6 +26,5 @@
     }
   ],
   "permissions": ["tabs"],
-
-  "web_accessible_resources": ["assets/icons/picto_sdc-24px.png", "assets/icons/picto_sdc-48px.png", "assets/icons/*.png"]
+  "web_accessible_resources": ["assets/icons/*.png"]
 }

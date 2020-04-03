@@ -1,9 +1,6 @@
-# Extension Territoire Plus
+# Extension Sources de confiance
 
-
-Ajoute un onglet Territoire Plus sur une page de résultats google.com ou google.fr.
-Le bouton permet de lancer la même requête que celle de Google dans TP.
-
+Marque les résultats de recherche sur une page de résultats google.com ou google.fr pour visualiser les liens qui correspondent au référentiel de « Sources de confiance » de Villes Internet : 35000 sites publics nationaux et locaux, institutionnels et universitaires.
 
 ### `npm run build`
 
@@ -29,4 +26,3 @@ It also enable [Hot Module Reloading](https://webpack.js.org/concepts/hot-module
 
 Build a zip file following this format `<name>-v<version>.zip`, by reading `name` and `version` from `manifest.json` file.
 Zip file is located in `dist-zip` folder.
-
