@@ -1,5 +1,30 @@
 var browser = require('webextension-polyfill');
 
+// DEFAULT SETTINGS
+// If there is nothing in storage, use these values.
+//-------------------------
+var defaultsettings = {
+  extensionswitch: 'on',
+};
+
+function checkStoredSettings(storedsettings) {
+  if (!storedsettings.extensionswitch) {
+    console.log('setting default');
+    console.log(defaultsettings);
+    browser.storage.local.set(defaultsettings);
+  } else {
+    console.log('found settings !');
+    console.log(storedsettings);
+  }
+}
+
+function onError(e) {
+  console.error(e);
+}
+
+const getStoredSettings = browser.storage.local.get();
+getStoredSettings.then(checkStoredSettings, onError);
+
 // FILTER MODULE
 // Get message from inject.js and send back the enrichedjson response
 //------------------------------
@@ -11,8 +36,8 @@ function handleMessage(json, sender, sendResponse) {
   if (json.type == 'GET_SERP') {
     var start_time = new Date().getTime();
     return new Promise((resolve, reject) => {
-      //var url = 'http://vps656318.ovh.net/api/proof';
-      var url = 'http://vps656318.ovh.net/api/trusted'; //API url. Check matching permission in package.json /!\
+      var url = 'http://sourcesdeconfiance.org/api/trusted';
+      //var url = 'http://vps656318.ovh.net/api/trusted'; //API url. Check matching permission in package.json /!\
       let xhr = new XMLHttpRequest();
       xhr.open('POST', url, true);
       xhr.setRequestHeader('Content-Type', 'data/json');
@@ -91,7 +116,7 @@ function handleMessage(json, sender, sendResponse) {
       }, 250);
     });
   }
-*/
+  */
 }
 
 browser.runtime.onMessage.addListener(handleMessage);

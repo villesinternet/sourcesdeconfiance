@@ -1,6 +1,11 @@
 var browser = require('webextension-polyfill');
 
-// (MODULE 1) GET SERP RESULTS
+// TO DO
+// * exclude qwant home page ? how ?
+// * onload addeventlistener is not enough for refreshed queries. We have to add a listener to enter key pressed or other event when a new query is entered
+// * Idem for more search results clicked > class result_load__more
+
+// (MODULE 1) GET SERP RESULTS FOR QWANT
 //----------------------------
 // Scrap the Search Engine Result Page and send request to the filter module
 
@@ -11,24 +16,26 @@ function onError(e) {
 function getSerp(storedSettings) {
   if (storedSettings.extensionswitch != 'off') {
     //if extension is switched on, proceed
-    const resultslist = document.getElementsByClassName('g');
-    const querystring = document.getElementsByName('q')[0].value;
+    var resultslist = document.getElementsByClassName('result--web'); //parent is result_fragment--first or result_fragment
+    var querystring = document.getElementsByName('q')[0].value;
     var resultjson = [];
     // fo each result, store id (from array index) and url (from href) in the resultjson array
     for (var i = 0; i < resultslist.length; i++) {
-      var el = resultslist[i].getElementsByClassName('rc'); // test if result has expected child. prevents code from breaking when a special info box occurs.
+      var el = resultslist[i].getElementsByTagName('h3'); // test if result has expected child. prevents code from breaking when a special info box occurs.
       if (el.length > 0) {
         resultjson.push({
           id: i,
-          url: resultslist[i]
-            .querySelector('.rc')
-            .querySelector('.r')
-            .querySelector('a').href,
+          url: resultslist[i].querySelector('h3').querySelector('a').href,
         });
       }
     }
+    console.log('My query : ' + querystring);
+    console.log(resultjson);
 
     var requestjson = { request: querystring, results: resultjson, type: 'GET_SERP' };
+    document.querySelector('.result_load__more').addEventListener('click', event => {
+      getSerp();
+    });
 
     notifyBackgroundPage(requestjson);
   } else {
@@ -66,44 +73,53 @@ function notifyBackgroundPage(json) {
 // Parse API response and apply new style and position to trusted results
 
 function highlight(enrichedjson) {
-  const resultslist = document.getElementsByClassName('g');
-  //check if it is the first result page, to apply specific style to the first result entry
-  if (window.location.href.indexOf('&start=0') != -1) {
-    firstresult = true;
-  } else if (window.location.href.indexOf('?start=') != -1) {
-    firstresult = false;
-  } else if (window.location.href.indexOf('&start=') != -1) {
-    firstresult = false;
-  } else {
-    var firstresult = true;
-  }
+  console.log('Begin higlight');
+  console.log(enrichedjson);
+  var resultslist = document.getElementsByClassName('result--web');
+  var firstresult = true;
 
   for (var i = 0; i < enrichedjson.length; i++) {
     if (enrichedjson[i].status == 'trusted') {
       resultslist[enrichedjson[i].id].classList.add('trusted');
+      resultslist[enrichedjson[i].id]
+        .querySelector('h3')
+        .querySelector('.result__url')
+        .querySelector('span')
+        .classList.add('trustedurl');
 
       if (firstresult) {
         resultslist[enrichedjson[i].id].classList.add('trustedfirst');
-        resultslist[enrichedjson[i].id].classList.add('tooltip');
+        resultslist[enrichedjson[i].id].classList.add('tooltipfirst');
+
         var para = document.createElement('span');
-        para.classList.add('tooltiptext');
+        para.classList.add('tooltipfirsttext');
         para.appendChild(document.createTextNode('Source de confiance '));
         let newNode = resultslist[enrichedjson[i].id];
+        console.log('newNode');
+        console.log(newNode);
         newNode.appendChild(para);
-        var parentDiv = document.getElementById('rso');
-        var firstChildNode = document.getElementById('rso').firstElementChild;
+        console.log('Yo here');
+        var parentDiv = document.getElementsByClassName('result_fragment--first')[0];
+        console.log('parentDiv');
+        console.log(parentDiv);
+        var firstChildNode = document.getElementsByClassName('result_fragment--first')[0].firstElementChild;
+        console.log('firstChildNode');
+        console.log(firstChildNode);
         parentDiv.insertBefore(newNode, firstChildNode);
+        console.log('OK');
         firstresult = false;
       }
     }
   }
+
   var pictourl = browser.runtime.getURL('assets/icons/sdc-24.png');
   // CSS injection - Define style for .trusted class
   var newstyles = `
-    .g.trusted {
-   }
+    .result__url__long {
+      color :#777;
+    }
 
-    .trusted cite {
+    .trustedurl.result__url__long{
       color: #34a853;
     }
 
@@ -117,7 +133,7 @@ function highlight(enrichedjson) {
       margin-left:-26px;
       background-image:url(${pictourl});
     }
-    .g.trustedfirst {
+    .trustedfirst {
       padding: 16px 5px 5px 16px;
       border: 1px solid #dfe1e5;
       border-radius: 8px;
@@ -139,12 +155,12 @@ function highlight(enrichedjson) {
         background-image:url(${pictourl});
       }
       /* Tooltip container */
-      .tooltip {
+      .tooltipfirst {
        position: relative;
        display: inline-block;
       }
       /* Tooltip text */
-      .tooltip .tooltiptext {
+      .tooltipfirst .tooltipfirsttext {
        visibility: hidden;
        width: 150px;
        background-color: #BBB;
@@ -164,7 +180,7 @@ function highlight(enrichedjson) {
        transition: opacity 0.3s;
       }
       /* Tooltip arrow */
-      .tooltip .tooltiptext::after {
+      .tooltipfirst .tooltipfirsttext::after {
        content: "";
        position: absolute;
        top: 100%;
@@ -175,7 +191,7 @@ function highlight(enrichedjson) {
        border-color: #BBB transparent transparent transparent;
       }
       /* Show the tooltip text when you mouse over the tooltip container */
-      .tooltip:hover .tooltiptext {
+      .tooltipfirst:hover .tooltipfirsttext {
        visibility: visible;
        opacity: 1;
       }

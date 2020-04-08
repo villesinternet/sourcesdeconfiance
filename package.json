@@ -68,7 +68,7 @@
   },
   "permissions": {
     "cross-domain-content": [
-      "http://vps656318.ovh.net/api/*"
+      "http://sourcesdeconfiance.org/api/*"
     ]
   }
 }

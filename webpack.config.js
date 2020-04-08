@@ -12,6 +12,7 @@ const config = {
   entry: {
     background: './background.js',
     inject: './inject.js',
+    injectqw: './injectqw.js',
     'popup/popup': './popup/popup.js',
     'options/options': './options/options.js',
   },
