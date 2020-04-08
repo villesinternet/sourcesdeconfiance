@@ -17,7 +17,8 @@ function getSerp(storedSettings) {
     // fo each result, store id (from array index) and url (from href) in the resultjson array
     for (var i = 0; i < resultslist.length; i++) {
       var el = resultslist[i].getElementsByClassName('rc'); // test if result has expected child. prevents code from breaking when a special info box occurs.
-      if (el.length > 0) {
+      if (el.length > 0 && !resultslist[i].classList.contains('kno-kp')) {
+        //quickfix do not analyse knowledge boxes. Could be a specific analysis instead
         resultjson.push({
           id: i,
           url: resultslist[i]
@@ -94,6 +95,11 @@ function highlight(enrichedjson) {
         var firstChildNode = document.getElementById('rso').firstElementChild;
         parentDiv.insertBefore(newNode, firstChildNode);
         firstresult = false;
+        if (resultslist[enrichedjson[i].id].classList.contains('g-blk')) {
+          //styling - only if the first trusted result is a special box mnr-c g-blk - could be improved
+          resultslist[enrichedjson[i].id].classList.remove('trustedfirst');
+          resultslist[enrichedjson[i].id].classList.add('trusted');
+        }
       }
     }
   }
