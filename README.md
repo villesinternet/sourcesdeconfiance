@@ -1,6 +1,6 @@
 # Extension Sources de confiance
 
-Marque les résultats de recherche sur une page de résultats google.com ou google.fr pour visualiser les liens qui correspondent au référentiel de « Sources de confiance » de Villes Internet : 35000 sites publics nationaux et locaux, institutionnels et universitaires.
+Marque les résultats de recherche sur une page de résultats qwant.com, google.com ou google.fr pour visualiser les liens qui correspondent au référentiel de « Sources de confiance » de Villes Internet : 35000 sites publics nationaux et locaux, institutionnels et universitaires. Site officiel : sources-de-confiance.fr
 
 ### `npm install`
 
