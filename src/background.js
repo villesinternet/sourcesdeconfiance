@@ -34,8 +34,8 @@ function handleMessage(json, sender, sendResponse) {
   if (json.type == 'GET_SERP') {
     var start_time = new Date().getTime();
     return new Promise((resolve, reject) => {
-      var url = 'http://sourcesdeconfiance.org/api/trusted';
-      //var url = 'http://vps656318.ovh.net/api/trusted'; //API url. Check matching permission in package.json /!\
+      var url = 'https://sourcesdeconfiance.org/api/trusted';
+      //var url = 'https://sources-de-confiance.fr/api/trusted'; //Future production url. Check matching permission in package.json /!\
       let xhr = new XMLHttpRequest();
       xhr.open('POST', url, true);
       xhr.setRequestHeader('Content-Type', 'data/json');

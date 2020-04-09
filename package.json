@@ -68,7 +68,7 @@
   },
   "permissions": {
     "cross-domain-content": [
-      "http://sourcesdeconfiance.org/api/*"
+      "https://sourcesdeconfiance.org/api/*"
     ]
   }
 }
