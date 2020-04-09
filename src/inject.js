@@ -48,7 +48,7 @@ window.addEventListener('load', function() {
 // Send a single message to event listeners within the extension
 // Response will be processed in background.js and sent back through the handler
 function handleResponse(enrichedjson) {
-  console.log(enrichedjson);
+  //console.log(enrichedjson);
   highlight(enrichedjson);
 }
 

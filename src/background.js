@@ -9,11 +9,9 @@ var defaultsettings = {
 
 function checkStoredSettings(storedsettings) {
   if (!storedsettings.extensionswitch) {
-    console.log('setting default');
-    console.log(defaultsettings);
     browser.storage.local.set(defaultsettings);
   } else {
-    console.log('found settings !');
+    console.log('Settings for Sources de confiance :');
     console.log(storedsettings);
   }
 }

@@ -29,8 +29,6 @@ function getSerp(storedSettings) {
         });
       }
     }
-    console.log('My query : ' + querystring);
-    console.log(resultjson);
 
     var requestjson = { request: querystring, results: resultjson, type: 'GET_SERP' };
     document.querySelector('.result_load__more').addEventListener('click', event => {
@@ -46,7 +44,50 @@ function getSerp(storedSettings) {
 //trigger the getSerp module on page load event
 window.addEventListener('load', function() {
   const getStoredSettings = browser.storage.local.get();
-  getStoredSettings.then(getSerp, onError);
+
+  //test url params to detect new searches on Qwant SERP
+  var queryString = window.location.search;
+  var urlParams = new URLSearchParams(queryString);
+  if (urlParams.has('q')) {
+    getStoredSettings.then(getSerp, onError);
+  }
+
+  var interval = window.setInterval(startWatch, 2000);
+  function startWatch() {
+    var newqueryString = window.location.search;
+    if (newqueryString != queryString) {
+      queryString = newqueryString;
+      // WE SHOULD FACTORIZE THIS (adding display more results listener)
+      var target = document.querySelector('.results-column');
+      if (target) {
+        var observer = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.addedNodes[0].classList.contains('result_fragment')) {
+              getStoredSettings.then(getSerp, onError);
+            }
+          });
+        });
+        var config = { childList: true };
+        observer.observe(target, config);
+      }
+      getStoredSettings.then(getSerp, onError);
+    }
+  }
+
+  //listen to the "display more results" button by watching new results nodes addidition to the results div
+  var target = document.querySelector('.results-column');
+  if (target) {
+    var observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        //console.log(mutation.addedNodes[0]);
+        if (mutation.addedNodes[0].classList.contains('result_fragment')) {
+          getStoredSettings.then(getSerp, onError);
+        }
+      });
+    });
+    var config = { childList: true };
+    observer.observe(target, config);
+  }
 });
 
 // (MODULE 2) FILTER
@@ -54,7 +95,7 @@ window.addEventListener('load', function() {
 // Send a single message to event listeners within the extension
 // Response will be processed in background.js and sent back through the handler
 function handleResponse(enrichedjson) {
-  console.log(enrichedjson);
+  //console.log(enrichedjson);
   highlight(enrichedjson);
 }
 
@@ -73,8 +114,6 @@ function notifyBackgroundPage(json) {
 // Parse API response and apply new style and position to trusted results
 
 function highlight(enrichedjson) {
-  console.log('Begin higlight');
-  console.log(enrichedjson);
   var resultslist = document.getElementsByClassName('result--web');
   var firstresult = true;
 
@@ -95,18 +134,10 @@ function highlight(enrichedjson) {
         para.classList.add('tooltipfirsttext');
         para.appendChild(document.createTextNode('Source de confiance '));
         let newNode = resultslist[enrichedjson[i].id];
-        console.log('newNode');
-        console.log(newNode);
         newNode.appendChild(para);
-        console.log('Yo here');
         var parentDiv = document.getElementsByClassName('result_fragment--first')[0];
-        console.log('parentDiv');
-        console.log(parentDiv);
         var firstChildNode = document.getElementsByClassName('result_fragment--first')[0].firstElementChild;
-        console.log('firstChildNode');
-        console.log(firstChildNode);
         parentDiv.insertBefore(newNode, firstChildNode);
-        console.log('OK');
         firstresult = false;
       }
     }
