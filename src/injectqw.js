@@ -13,32 +13,47 @@ function onError(e) {
   console.error(e);
 }
 
-function getSerp(storedSettings) {
+function preGetSerp(storedSettings) {
+  //if extension is switched on, proceed
   if (storedSettings.extensionswitch != 'off') {
-    //if extension is switched on, proceed
-    var resultslist = document.getElementsByClassName('result--web'); //parent is result_fragment--first or result_fragment
-    var querystring = document.getElementsByName('q')[0].value;
-    var resultjson = [];
-    // fo each result, store id (from array index) and url (from href) in the resultjson array
-    for (var i = 0; i < resultslist.length; i++) {
-      var el = resultslist[i].getElementsByTagName('h3'); // test if result has expected child. prevents code from breaking when a special info box occurs.
-      if (el.length > 0) {
-        resultjson.push({
-          id: i,
-          url: resultslist[i].querySelector('h3').querySelector('a').href,
+    var resultslist = document.getElementsByClassName('result--web');
+    if (resultslist.length > 0) {
+      getSerp(storedSettings);
+    } else {
+      var target = document.querySelector('.result_fragment--first');
+      if (target) {
+        var newobserver = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            newobserver.disconnect();
+            preGetSerp(storedSettings);
+          });
         });
+        var config = { childList: true };
+        newobserver.observe(target, config);
       }
     }
-
-    var requestjson = { request: querystring, results: resultjson, type: 'GET_SERP' };
-    document.querySelector('.result_load__more').addEventListener('click', event => {
-      getSerp();
-    });
-
-    notifyBackgroundPage(requestjson);
   } else {
     console.log('extension is switched off');
   }
+}
+
+function getSerp(storedSettings) {
+  var resultslist = document.getElementsByClassName('result--web'); //parent is result_fragment--first or result_fragment
+  var querystring = document.getElementsByName('q')[0].value;
+  var resultjson = [];
+  // fo each result, store id (from array index) and url (from href) in the resultjson array
+  for (var i = 0; i < resultslist.length; i++) {
+    var el = resultslist[i].getElementsByTagName('h3'); // test if result has expected child. prevents code from breaking when a special info box occurs.
+    if (el.length > 0) {
+      resultjson.push({
+        id: i,
+        url: resultslist[i].querySelector('h3').querySelector('a').href,
+      });
+    }
+  }
+  var requestjson = { request: querystring, results: resultjson, userAgent: window.navigator.userAgent, type: 'GET_SERP' };
+  //console.log(requestjson);
+  notifyBackgroundPage(requestjson);
 }
 
 //trigger the getSerp module on page load event
@@ -49,12 +64,14 @@ window.addEventListener('load', function() {
   var queryString = window.location.search;
   var urlParams = new URLSearchParams(queryString);
   if (urlParams.has('q')) {
-    getStoredSettings.then(getSerp, onError);
+    getStoredSettings.then(preGetSerp, onError);
   }
 
   var interval = window.setInterval(startWatch, 2000);
   function startWatch() {
     var newqueryString = window.location.search;
+    // ADD TEST IF THERE IS A GOSTCSS THEN SET queryString to ""
+    // Or if enter is pressed or page reloaded or else ?
     if (newqueryString != queryString) {
       queryString = newqueryString;
       // WE SHOULD FACTORIZE THIS (adding display more results listener)
@@ -63,14 +80,14 @@ window.addEventListener('load', function() {
         var observer = new MutationObserver(function(mutations) {
           mutations.forEach(function(mutation) {
             if (mutation.addedNodes[0].classList.contains('result_fragment')) {
-              getStoredSettings.then(getSerp, onError);
+              getStoredSettings.then(preGetSerp, onError);
             }
           });
         });
         var config = { childList: true };
         observer.observe(target, config);
       }
-      getStoredSettings.then(getSerp, onError);
+      getStoredSettings.then(preGetSerp, onError);
     }
   }
 
@@ -81,7 +98,7 @@ window.addEventListener('load', function() {
       mutations.forEach(function(mutation) {
         //console.log(mutation.addedNodes[0]);
         if (mutation.addedNodes[0].classList.contains('result_fragment')) {
-          getStoredSettings.then(getSerp, onError);
+          getStoredSettings.then(preGetSerp, onError);
         }
       });
     });
@@ -232,4 +249,26 @@ function highlight(enrichedjson) {
   styleSheet.type = 'text/css';
   styleSheet.innerText = newstyles;
   document.head.appendChild(styleSheet);
+  /**
+
+  // A MUTATION OBSERVER COULD SOLVE THE "REPEAT QUERY" BUG ON QWANT - or other DOM refreshing behavior by qwant's application
+  var checkallpage = document.querySelector('#main');
+  console.log(checkallpage)
+  if (checkallpage) {
+    var pageobserver = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        //console.log("mutation")
+        if(mutation.target.classList.contains('result_fragment')){
+            console.log(mutation)
+        }
+
+        pageobserver.disconnect();
+        //preGetSerp({});
+      });
+    });
+    var completeconfig = { childList: true,
+  subtree: true};
+    pageobserver.observe(checkallpage, completeconfig);
+  }
+*/
 }

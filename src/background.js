@@ -7,12 +7,49 @@ var defaultsettings = {
   extensionswitch: 'on',
 };
 
+function checkAPI() {
+  var start_time = new Date().getTime();
+  var url = 'https://sourcesdeconfiance.org/api/version';
+  //var url = 'https://sources-de-confiance.fr/api/version'; //Future production url. Check matching permission in package.json /!\
+  let xhr = new XMLHttpRequest();
+  xhr.open('GET', url, true);
+  xhr.onload = () => {
+    if (xhr.status >= 200 && xhr.status < 300) {
+      //LOGS FOR DEBUGGING
+      var request_time = new Date().getTime() - start_time;
+      console.log('resolved in ' + request_time + 'ms');
+      console.log(xhr.response);
+    } else {
+      console.log(xhr.statusText);
+    }
+  };
+  xhr.onerror = () => reject(xhr.statusText);
+  xhr.send();
+}
+//
 function checkStoredSettings(storedsettings) {
+  // cOULD BE FACTORIZED
+  var today = new Date();
   if (!storedsettings.extensionswitch) {
+    defaultsettings.lastcheck = today;
+    checkAPI();
     browser.storage.local.set(defaultsettings);
   } else {
-    console.log('Settings for Sources de confiance :');
-    console.log(storedsettings);
+    if (!storedsettings.lastcheck) {
+      storedsettings.lastcheck = today;
+      checkAPI();
+      browser.storage.local.set(storedsettings);
+    } else {
+      var diff = Math.floor((Date.parse(today) - Date.parse(storedsettings.lastcheck)) / 86400000);
+      if (diff > 0) {
+        storedsettings.lastcheck = today;
+        checkAPI();
+        browser.storage.local.set(storedsettings);
+      } else {
+        console.log(storedsettings);
+        console.log('everything up to date');
+      }
+    }
   }
 }
 

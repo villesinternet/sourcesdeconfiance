@@ -29,7 +29,7 @@ function getSerp(storedSettings) {
       }
     }
 
-    var requestjson = { request: querystring, results: resultjson, type: 'GET_SERP' };
+    var requestjson = { request: querystring, results: resultjson, userAgent: window.navigator.userAgent, type: 'GET_SERP' };
 
     notifyBackgroundPage(requestjson);
   } else {
