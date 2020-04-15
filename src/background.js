@@ -5,6 +5,7 @@ var browser = require('webextension-polyfill');
 //-------------------------
 var defaultsettings = {
   extensionswitch: 'on',
+  apiserver: 'https://sourcesdeconfiance.org/api/trusted',
 };
 
 function checkAPI() {
@@ -67,11 +68,17 @@ function handleMessage(json, sender, sendResponse) {
   if (json.type == 'SIGN_CONNECT') {
     return true;
   }
-
+  //PASSER le user agent dans le header du POST
+  //Ajouter une propriete searchengine : google,qwant,bing...
   if (json.type == 'GET_SERP') {
     var start_time = new Date().getTime();
     return new Promise((resolve, reject) => {
       var url = 'https://sourcesdeconfiance.org/api/trusted';
+      if (json.apiserver) {
+        url = json.apiserver;
+        delete json.apiserver;
+        delete json.type;
+      }
       //var url = 'https://sources-de-confiance.fr/api/trusted'; //Future production url. Check matching permission in package.json /!\
       let xhr = new XMLHttpRequest();
       xhr.open('POST', url, true);

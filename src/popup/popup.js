@@ -14,21 +14,6 @@ new Vue({
   render: h => h(App),
 });
 
-/**
-const btn = document.querySelector('#extensionswitch');
-if (btn)
-    btn.addEventListener('click', switchStatus);function switchStatus() {
-      console.log("click")
-      console.log(document.querySelector('#extensionswitch').checked)
-      if (document.querySelector('#extensionswitch').checked) {
-        console.log("switch to on !")
-      }
-      else {
-        console.log("switch to off !")
-      }
-}
-*/
-
 function onError(e) {
   console.error(e);
 }
@@ -37,12 +22,15 @@ function checkStoredSettings(storedsettings) {
   if (!storedsettings.extensionswitch) {
     document.querySelector('#extensionswitch').checked = true;
     document.querySelector('#switchstatus').textContent = '';
+    browser.browserAction.setIcon({ path: '../assets/icons/sdc-48.png' });
   } else if (storedsettings.extensionswitch == 'off') {
     document.querySelector('#extensionswitch').checked = false;
     document.querySelector('#switchstatus').textContent = 'extension désactivée, cliquez pour la réactiver';
+    browser.browserAction.setIcon({ path: '../assets/icons/sdc-off-48.png' });
   } else {
     document.querySelector('#extensionswitch').checked = true;
     document.querySelector('#switchstatus').textContent = '';
+    browser.browserAction.setIcon({ path: '../assets/icons/sdc-48.png' });
   }
 }
 

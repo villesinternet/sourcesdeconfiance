@@ -51,7 +51,13 @@ function getSerp(storedSettings) {
       });
     }
   }
-  var requestjson = { request: querystring, results: resultjson, userAgent: window.navigator.userAgent, type: 'GET_SERP' };
+
+  var apiserver = 'https://sourcesdeconfiance.org/api/trusted';
+  if (storedSettings.apiserver) {
+    apiserver = storedSettings.apiserver;
+    console.log('using ' + apiserver);
+  }
+  var requestjson = { request: querystring, results: resultjson, userAgent: window.navigator.userAgent, apiserver: apiserver, searchengine: 'qwant', type: 'GET_SERP' };
   //console.log(requestjson);
   notifyBackgroundPage(requestjson);
 }

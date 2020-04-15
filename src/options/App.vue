@@ -1,17 +1,28 @@
 <template>
-    <div>
-        <p>Bonjour world!</p>
-    </div>
+  <div>
+    <h2>Explorer & Contribuer aux Sources de confiance</h2>
+    <p>Sources de confiance identifie plus de 35000 sites publics, institutionnels et universitaires et exclut automatiquement les sites malveillants.</p>
+    <p>
+      Cette ressource est actualisée en permanence grâce aux contributions de chacun. Comme membre de la communauté de ses utilisateurs, vous pouvez donc vérifier la présence d'un
+      site, et éventuellement proposer son ajout aux Sources de confiance.
+    </p>
+    <p><a href="https://sources-de-confiance.fr/sources">> Contribuer</a></p>
+  </div>
 </template>
 
 <script>
 export default {
-    name: 'App',
+  name: 'App',
 };
 </script>
 
 <style scoped>
+h2 {
+  font-size: 18px;
+  font-weight: bold;
+}
 p {
-    font-size: 20px;
+  font-size: 14px;
+  font-family: Montserrat, Arial, sans-serif;
 }
 </style>
