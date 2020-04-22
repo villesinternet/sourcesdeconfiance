@@ -4,8 +4,8 @@
 // * Idem for more search results clicked > class result_load__more
 
 // INITIALIZATION
+var browser = require('webextension-polyfill');
 
-console.log('hello');
 const getStoredSettings = browser.storage.local.get();
 
 //test url params to detect new searches on Qwant SERP

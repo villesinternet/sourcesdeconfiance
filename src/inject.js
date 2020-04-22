@@ -1,4 +1,4 @@
-// INTIALIZATION
+// INITIALIZATION
 
 var browser = require('webextension-polyfill');
 

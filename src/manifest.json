@@ -27,6 +27,10 @@
     {
       "matches": ["https://www.qwant.com/*"],
       "js": ["browser-polyfill.js", "injectqw.js"]
+    },
+    {
+      "matches": ["https://www.bing.com/search*"],
+      "js": ["browser-polyfill.js", "injectbing.js"]
     }
   ],
   "permissions": ["activeTab", "storage"],

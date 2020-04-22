@@ -1,24 +1,9 @@
-// MODULE TO BE FINISHED
-/**
-Please add to manifest.json in content_scripts
-
-,
-{
-  "matches": ["https://www.bing.com/search*"],
-  "js": ["browser-polyfill.js", "injectbing.js"]
-}
-
-*/
-
 // INITIALIZATION
 
-//const getStoredSettings = browser.storage.local.get();
-//getStoredSettings.then(getSerp, onError);
-console.log('coucou bing');
-//const querystring = document.getElementsByName('q')[0].value;
-console.log(querystring);
-//const resultslist = document.getElementsByClassName('b_algo');
-//console.log(resultslist);
+var browser = require('webextension-polyfill');
+
+const getStoredSettings = browser.storage.local.get();
+getStoredSettings.then(getSerp, onError);
 
 function onError(e) {
   console.error(e);
@@ -31,20 +16,24 @@ function onError(e) {
 function getSerp(storedSettings) {
   if (storedSettings.extensionswitch != 'off') {
     //if extension is switched on, proceed
-    const resultslist = document.getElementsByClassName('g');
+    const resultslist = document.getElementsByClassName('b_algo');
     const querystring = document.getElementsByName('q')[0].value;
     var resultjson = [];
     // fo each result, store id (from array index) and url (from href) in the resultjson array
     for (var i = 0; i < resultslist.length; i++) {
-      var el = resultslist[i].getElementsByClassName('rc'); // test if result has expected child. prevents code from breaking when a special info box occurs.
-      if (el.length > 0 && !resultslist[i].classList.contains('kno-kp')) {
-        //quickfix do not analyse knowledge boxes. Could be a specific analysis instead
+      if (resultslist[i].getElementsByTagName('h2').length) {
+        //normal result
+        var elementurl = resultslist[i].querySelector('h2').querySelector('a').href;
         resultjson.push({
           id: i,
-          url: resultslist[i]
-            .querySelector('.rc')
-            .querySelector('.r')
-            .querySelector('a').href,
+          url: elementurl,
+        });
+      } else if (resultslist[i].getElementsByTagName('a').length) {
+        //knowledge box result
+        var elementurl = resultslist[i].querySelector('a').href;
+        resultjson.push({
+          id: i,
+          url: elementurl,
         });
       }
     }
@@ -53,8 +42,7 @@ function getSerp(storedSettings) {
       apiserver = storedSettings.apiserver;
       console.log('using ' + apiserver);
     }
-    var requestjson = { request: querystring, results: resultjson, userAgent: window.navigator.userAgent, apiserver: apiserver, searchengine: 'google', type: 'GET_SERP' };
-
+    var requestjson = { request: querystring, results: resultjson, userAgent: window.navigator.userAgent, apiserver: apiserver, searchengine: 'bing', type: 'GET_SERP' };
     notifyBackgroundPage(requestjson);
   } else {
     console.log('extension is switched off');
@@ -85,13 +73,13 @@ function notifyBackgroundPage(json) {
 // Parse API response and apply new style and position to trusted results
 
 function highlight(enrichedjson) {
-  const resultslist = document.getElementsByClassName('g');
+  const resultslist = document.getElementsByClassName('b_algo');
   //check if it is the first result page, to apply specific style to the first result entry
-  if (window.location.href.indexOf('&start=0') != -1) {
+  if (window.location.href.indexOf('&first=1&') != -1) {
     firstresult = true;
-  } else if (window.location.href.indexOf('?start=') != -1) {
+  } else if (window.location.href.indexOf('?first=') != -1) {
     firstresult = false;
-  } else if (window.location.href.indexOf('&start=') != -1) {
+  } else if (window.location.href.indexOf('&first=') != -1) {
     firstresult = false;
   } else {
     var firstresult = true;
@@ -109,22 +97,22 @@ function highlight(enrichedjson) {
         para.appendChild(document.createTextNode('Source de confiance '));
         let newNode = resultslist[enrichedjson[i].id];
         newNode.appendChild(para);
-        var parentDiv = document.getElementById('rso');
-        var firstChildNode = document.getElementById('rso').firstElementChild;
+        var parentDiv = document.getElementById('b_results');
+        var firstChildNode = resultslist[0];
         parentDiv.insertBefore(newNode, firstChildNode);
         firstresult = false;
-        if (resultslist[enrichedjson[i].id].classList.contains('g-blk')) {
-          //styling - only if the first trusted result is a special box mnr-c g-blk - could be improved
-          resultslist[enrichedjson[i].id].classList.remove('trustedfirst');
-          resultslist[enrichedjson[i].id].classList.add('trusted');
-        }
       }
     }
   }
+
   var pictourl = browser.runtime.getURL('assets/icons/sdc-24.png');
   // CSS injection - Define style for .trusted class
   var newstyles = `
-    .g.trusted {
+    .trusted {
+   }
+
+   cite, #b_results {
+     color: #555;
    }
 
     .trusted cite {
@@ -141,7 +129,7 @@ function highlight(enrichedjson) {
       margin-left:-26px;
       background-image:url(${pictourl});
     }
-    .g.trustedfirst {
+    .trustedfirst {
       padding: 16px 5px 5px 16px;
       border: 1px solid #dfe1e5;
       border-radius: 8px;
@@ -159,7 +147,7 @@ function highlight(enrichedjson) {
         display:block;
         float:right;
         margin-left:-15px;
-        margin-top:-17px;
+        margin-top:-11px;
         background-image:url(${pictourl});
       }
       /* Tooltip container */
@@ -181,7 +169,7 @@ function highlight(enrichedjson) {
        z-index: 1;
        bottom: 100%;
        left: 100%;
-       margin-left: -92px;
+       margin-left: -107px;
        margin-bottom: 6px;
        /* Fade in tooltip */
        opacity: 0;
