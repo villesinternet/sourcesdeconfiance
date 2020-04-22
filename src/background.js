@@ -83,6 +83,7 @@ function handleMessage(json, sender, sendResponse) {
       let xhr = new XMLHttpRequest();
       xhr.open('POST', url, true);
       xhr.setRequestHeader('Content-Type', 'data/json');
+      xhr.setRequestHeader('User-Agent', json.userAgent);
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
           //LOGS FOR DEBUGGING
@@ -93,6 +94,7 @@ function handleMessage(json, sender, sendResponse) {
           resolve(enrichedjson);
         } else {
           console.log(xhr.statusText);
+          console.log(xhr);
           reject(xhr.statusText);
         }
       };

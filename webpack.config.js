@@ -13,6 +13,7 @@ const config = {
     background: './background.js',
     inject: './inject.js',
     injectqw: './injectqw.js',
+    injectbing: './injectbing.js',
     'popup/popup': './popup/popup.js',
     'options/options': './options/options.js',
   },
