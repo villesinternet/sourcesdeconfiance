@@ -1,17 +1,66 @@
-var browser = require('webextension-polyfill');
-
 // TO DO
 // * exclude qwant home page ? how ?
 // * onload addeventlistener is not enough for refreshed queries. We have to add a listener to enter key pressed or other event when a new query is entered
 // * Idem for more search results clicked > class result_load__more
 
-// (MODULE 1) GET SERP RESULTS FOR QWANT
-//----------------------------
-// Scrap the Search Engine Result Page and send request to the filter module
+// INITIALIZATION
+
+console.log('hello');
+const getStoredSettings = browser.storage.local.get();
+
+//test url params to detect new searches on Qwant SERP
+var queryString = window.location.search;
+var urlParams = new URLSearchParams(queryString);
+if (urlParams.has('q')) {
+  getStoredSettings.then(preGetSerp, onError);
+}
+
+var interval = window.setInterval(startWatch, 2000);
+function startWatch() {
+  var newqueryString = window.location.search;
+  // ADD TEST IF THERE IS A GOSTCSS THEN SET queryString to ""
+  // Or if enter is pressed or page reloaded or else ?
+  if (newqueryString != queryString) {
+    queryString = newqueryString;
+    // WE SHOULD FACTORIZE THIS (adding display more results listener)
+    var target = document.querySelector('.results-column');
+    if (target) {
+      var observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+          if (mutation.addedNodes[0].classList.contains('result_fragment')) {
+            getStoredSettings.then(preGetSerp, onError);
+          }
+        });
+      });
+      var config = { childList: true };
+      observer.observe(target, config);
+    }
+    getStoredSettings.then(preGetSerp, onError);
+  }
+}
+
+//listen to the "display more results" button by watching new results nodes addidition to the results div
+var target = document.querySelector('.results-column');
+if (target) {
+  var observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      //console.log(mutation.addedNodes[0]);
+      if (mutation.addedNodes[0].classList.contains('result_fragment')) {
+        getStoredSettings.then(preGetSerp, onError);
+      }
+    });
+  });
+  var config = { childList: true };
+  observer.observe(target, config);
+}
 
 function onError(e) {
   console.error(e);
 }
+
+// (MODULE 1) GET SERP RESULTS FOR QWANT
+//----------------------------
+// Scrap the Search Engine Result Page and send request to the filter module
 
 function preGetSerp(storedSettings) {
   //if extension is switched on, proceed
@@ -61,57 +110,6 @@ function getSerp(storedSettings) {
   //console.log(requestjson);
   notifyBackgroundPage(requestjson);
 }
-
-//trigger the getSerp module on page load event
-window.addEventListener('load', function() {
-  const getStoredSettings = browser.storage.local.get();
-
-  //test url params to detect new searches on Qwant SERP
-  var queryString = window.location.search;
-  var urlParams = new URLSearchParams(queryString);
-  if (urlParams.has('q')) {
-    getStoredSettings.then(preGetSerp, onError);
-  }
-
-  var interval = window.setInterval(startWatch, 2000);
-  function startWatch() {
-    var newqueryString = window.location.search;
-    // ADD TEST IF THERE IS A GOSTCSS THEN SET queryString to ""
-    // Or if enter is pressed or page reloaded or else ?
-    if (newqueryString != queryString) {
-      queryString = newqueryString;
-      // WE SHOULD FACTORIZE THIS (adding display more results listener)
-      var target = document.querySelector('.results-column');
-      if (target) {
-        var observer = new MutationObserver(function(mutations) {
-          mutations.forEach(function(mutation) {
-            if (mutation.addedNodes[0].classList.contains('result_fragment')) {
-              getStoredSettings.then(preGetSerp, onError);
-            }
-          });
-        });
-        var config = { childList: true };
-        observer.observe(target, config);
-      }
-      getStoredSettings.then(preGetSerp, onError);
-    }
-  }
-
-  //listen to the "display more results" button by watching new results nodes addidition to the results div
-  var target = document.querySelector('.results-column');
-  if (target) {
-    var observer = new MutationObserver(function(mutations) {
-      mutations.forEach(function(mutation) {
-        //console.log(mutation.addedNodes[0]);
-        if (mutation.addedNodes[0].classList.contains('result_fragment')) {
-          getStoredSettings.then(preGetSerp, onError);
-        }
-      });
-    });
-    var config = { childList: true };
-    observer.observe(target, config);
-  }
-});
 
 // (MODULE 2) FILTER
 //--------------------------

@@ -1,12 +1,17 @@
+// INTIALIZATION
+
 var browser = require('webextension-polyfill');
 
-// (MODULE 1) GET SERP RESULTS
-//----------------------------
-// Scrap the Search Engine Result Page and send request to the filter module
+const getStoredSettings = browser.storage.local.get();
+getStoredSettings.then(getSerp, onError);
 
 function onError(e) {
   console.error(e);
 }
+
+// (MODULE 1) GET SERP RESULTS
+//----------------------------
+// Scrap the Search Engine Result Page and send request to the filter module
 
 function getSerp(storedSettings) {
   if (storedSettings.extensionswitch != 'off') {
@@ -40,12 +45,6 @@ function getSerp(storedSettings) {
     console.log('extension is switched off');
   }
 }
-
-//trigger the getSerp module on page load event
-window.addEventListener('load', function() {
-  const getStoredSettings = browser.storage.local.get();
-  getStoredSettings.then(getSerp, onError);
-});
 
 // (MODULE 2) FILTER
 //--------------------------

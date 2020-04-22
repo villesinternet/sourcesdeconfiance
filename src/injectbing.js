@@ -1,5 +1,3 @@
-var browser = require('webextension-polyfill');
-
 // MODULE TO BE FINISHED
 /**
 Please add to manifest.json in content_scripts
@@ -12,13 +10,23 @@ Please add to manifest.json in content_scripts
 
 */
 
-// (MODULE 1) GET SERP RESULTS
-//----------------------------
-// Scrap the Search Engine Result Page and send request to the filter module
+// INITIALIZATION
+
+//const getStoredSettings = browser.storage.local.get();
+//getStoredSettings.then(getSerp, onError);
+console.log('coucou bing');
+//const querystring = document.getElementsByName('q')[0].value;
+console.log(querystring);
+//const resultslist = document.getElementsByClassName('b_algo');
+//console.log(resultslist);
 
 function onError(e) {
   console.error(e);
 }
+
+// (MODULE 1) GET SERP RESULTS
+//----------------------------
+// Scrap the Search Engine Result Page and send request to the filter module
 
 function getSerp(storedSettings) {
   if (storedSettings.extensionswitch != 'off') {
@@ -52,17 +60,6 @@ function getSerp(storedSettings) {
     console.log('extension is switched off');
   }
 }
-
-//trigger the getSerp module on page load event
-window.addEventListener('load', function() {
-  //const getStoredSettings = browser.storage.local.get();
-  //getStoredSettings.then(getSerp, onError);
-  console.log('coucou bing');
-  //const querystring = document.getElementsByName('q')[0].value;
-  console.log(querystring);
-  //const resultslist = document.getElementsByClassName('b_algo');
-  //console.log(resultslist);
-});
 
 // (MODULE 2) FILTER
 //--------------------------
