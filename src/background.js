@@ -14,6 +14,7 @@ function checkAPI() {
   //var url = 'https://sources-de-confiance.fr/api/version'; //Future production url. Check matching permission in package.json /!\
   let xhr = new XMLHttpRequest();
   xhr.open('GET', url, true);
+  xhr.setRequestHeader('User-Agent', window.navigator.userAgent);
   xhr.onload = () => {
     if (xhr.status >= 200 && xhr.status < 300) {
       //LOGS FOR DEBUGGING
