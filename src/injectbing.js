@@ -4,7 +4,6 @@ var browser = require('webextension-polyfill');
 
 const getStoredSettings = browser.storage.local.get();
 getStoredSettings.then(getSerp, onError);
-
 function onError(e) {
   console.error(e);
 }
@@ -12,7 +11,6 @@ function onError(e) {
 // (MODULE 1) GET SERP RESULTS
 //----------------------------
 // Scrap the Search Engine Result Page and send request to the filter module
-
 function getSerp(storedSettings) {
   if (storedSettings.extensionswitch != 'off') {
     //if extension is switched on, proceed
@@ -21,15 +19,27 @@ function getSerp(storedSettings) {
     var resultjson = [];
     // fo each result, store id (from array index) and url (from href) in the resultjson array
     for (var i = 0; i < resultslist.length; i++) {
+      console.log(resultslist);
       if (resultslist[i].getElementsByTagName('h2').length) {
         //normal result
-        var elementurl = resultslist[i].querySelector('h2').querySelector('a').href;
-        resultjson.push({
-          id: i,
-          url: elementurl,
-        });
+        console.log(resultslist[i].querySelector('h2').getElementsByTagName('a'));
+        if (resultslist[i].querySelector('h2').getElementsByTagName('a').length) {
+          var elementurl = resultslist[i].querySelector('h2').querySelector('a').href;
+          resultjson.push({
+            id: i,
+            url: elementurl,
+          });
+          console.log(resultjson);
+        } else if (resultslist[i].getElementsByClassName('b_title').length) {
+          //knowledge box result (title)
+          var elementurl = resultslist[i].querySelector('.b_title').querySelector('a').href;
+          resultjson.push({
+            id: i,
+            url: elementurl,
+          });
+        }
       } else if (resultslist[i].getElementsByTagName('a').length) {
-        //knowledge box result
+        //knowledge box result (subresult)
         var elementurl = resultslist[i].querySelector('a').href;
         resultjson.push({
           id: i,
@@ -88,7 +98,6 @@ function highlight(enrichedjson) {
   for (var i = 0; i < enrichedjson.length; i++) {
     if (enrichedjson[i].status == 'trusted') {
       resultslist[enrichedjson[i].id].classList.add('trusted');
-
       if (firstresult) {
         resultslist[enrichedjson[i].id].classList.add('trustedfirst');
         resultslist[enrichedjson[i].id].classList.add('tooltip');
@@ -98,7 +107,11 @@ function highlight(enrichedjson) {
         let newNode = resultslist[enrichedjson[i].id];
         newNode.appendChild(para);
         var parentDiv = document.getElementById('b_results');
-        var firstChildNode = resultslist[0];
+        var firstChildNode = document.getElementById('b_results').firstElementChild;
+        if (firstChildNode.classList.contains('b_ad')) {
+          //if first element is an ad, consider that the first real result is the next element
+          firstChildNode = firstChildNode.nextSibling;
+        }
         parentDiv.insertBefore(newNode, firstChildNode);
         firstresult = false;
       }

@@ -8,12 +8,15 @@ var defaultsettings = {
   apiserver: 'https://sourcesdeconfiance.org/api/trusted',
 };
 
+const extensionversion = '1.0.7';
+
 function checkAPI() {
   var start_time = new Date().getTime();
+  var dailyhello = { version: extensionversion, userAgent: window.navigator.userAgent };
   var url = 'https://sourcesdeconfiance.org/api/version';
-  //var url = 'https://sources-de-confiance.fr/api/version'; //Future production url. Check matching permission in package.json /!\
   let xhr = new XMLHttpRequest();
   xhr.open('GET', url, true);
+  xhr.setRequestHeader('Content-Type', 'data/json');
   xhr.onload = () => {
     if (xhr.status >= 200 && xhr.status < 300) {
       //LOGS FOR DEBUGGING
@@ -25,7 +28,7 @@ function checkAPI() {
     }
   };
   xhr.onerror = () => reject(xhr.statusText);
-  xhr.send();
+  xhr.send(JSON.stringify(dailyhello));
 }
 //
 function checkStoredSettings(storedsettings) {
@@ -79,11 +82,10 @@ function handleMessage(json, sender, sendResponse) {
         delete json.apiserver;
         delete json.type;
       }
-      //var url = 'https://sources-de-confiance.fr/api/trusted'; //Future production url. Check matching permission in package.json /!\
+      json.version = extensionversion;
       let xhr = new XMLHttpRequest();
       xhr.open('POST', url, true);
       xhr.setRequestHeader('Content-Type', 'data/json');
-      //xhr.setRequestHeader('User-Agent', json.userAgent);
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
           //LOGS FOR DEBUGGING
