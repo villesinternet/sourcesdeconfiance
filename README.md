@@ -1,6 +1,20 @@
 # Extension Sources de confiance
 
-Marque les résultats de recherche sur une page de résultats qwant.com, google.com ou google.fr pour visualiser les liens qui correspondent au référentiel de « Sources de confiance » de Villes Internet : 35000 sites publics nationaux et locaux, institutionnels et universitaires. Site officiel : sources-de-confiance.fr
+Marque les résultats sur une page de moteur de recherche (SERP) pour visualiser les liens qui correspondent au référentiel « Sources de confiance » proposé par Villes Internet : 35000 sites publics nationaux et locaux, institutionnels et universitaires. Site officiel : sources-de-confiance.fr
+
+### Navigateurs compatibles (v1.0.7 et ultérieures)
+
+- Firefox : https://addons.mozilla.org/fr/firefox/addon/sources-de-confiance/
+- Chrome : https://chrome.google.com/webstore/detail/sources-de-confiance/kcogbonnkheeologjkpkclphajgomnjf?hl=fr
+- Edge (chromium based) : https://microsoftedge.microsoft.com/addons/detail/kepjhbgmhepmedlmehknjieanmonjjfi
+
+### Moteurs de recherches compatibles (v1.0.7 et ultérieures)
+
+- google.com, google.fr
+- qwant.com
+- bing.com
+
+## Instructions
 
 ### `npm install`
 
