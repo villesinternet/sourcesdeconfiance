@@ -4,7 +4,6 @@ var browser = require('webextension-polyfill');
 
 const getStoredSettings = browser.storage.local.get();
 getStoredSettings.then(getSerp, onError);
-
 function onError(e) {
   console.error(e);
 }
@@ -12,7 +11,6 @@ function onError(e) {
 // (MODULE 1) GET SERP RESULTS
 //----------------------------
 // Scrap the Search Engine Result Page and send request to the filter module
-
 function getSerp(storedSettings) {
   if (storedSettings.extensionswitch != 'off') {
     //if extension is switched on, proceed
@@ -39,8 +37,8 @@ function getSerp(storedSettings) {
       console.log('using ' + apiserver);
     }
     var requestjson = { request: querystring, results: resultjson, userAgent: window.navigator.userAgent, apiserver: apiserver, searchengine: 'google', type: 'GET_SERP' };
-
-    notifyBackgroundPage(requestjson);
+    //notify background page
+    browser.runtime.sendMessage(requestjson);
   } else {
     console.log('extension is switched off');
   }
@@ -50,20 +48,13 @@ function getSerp(storedSettings) {
 //--------------------------
 // Send a single message to event listeners within the extension
 // Response will be processed in background.js and sent back through the handler
-function handleResponse(enrichedjson) {
-  //console.log(enrichedjson);
-  highlight(enrichedjson);
+function handleMessage(request, sender, sendResponse) {
+  if (request.message === 'HIGHLIGHT') {
+    highlight(request.json);
+  }
 }
 
-function handleError(error) {
-  console.log(`Error: ${error}`);
-}
-
-function notifyBackgroundPage(json) {
-  var sending = browser.runtime.sendMessage(json);
-  //console.log('request : source de confiance');
-  sending.then(handleResponse, handleError);
-}
+browser.runtime.onMessage.addListener(handleMessage);
 
 // (MODULE 3) HIGHLIGHT
 //-------------------------

@@ -1,9 +1,5 @@
-// TO DO
-// * exclude qwant home page ? how ?
-// * onload addeventlistener is not enough for refreshed queries. We have to add a listener to enter key pressed or other event when a new query is entered
-// * Idem for more search results clicked > class result_load__more
-
 // INITIALIZATION
+
 var browser = require('webextension-polyfill');
 
 const getStoredSettings = browser.storage.local.get();
@@ -107,28 +103,21 @@ function getSerp(storedSettings) {
     console.log('using ' + apiserver);
   }
   var requestjson = { request: querystring, results: resultjson, userAgent: window.navigator.userAgent, apiserver: apiserver, searchengine: 'qwant', type: 'GET_SERP' };
-  //console.log(requestjson);
-  notifyBackgroundPage(requestjson);
+  //notify background page
+  browser.runtime.sendMessage(requestjson);
 }
 
 // (MODULE 2) FILTER
 //--------------------------
 // Send a single message to event listeners within the extension
 // Response will be processed in background.js and sent back through the handler
-function handleResponse(enrichedjson) {
-  //console.log(enrichedjson);
-  highlight(enrichedjson);
+function handleMessage(request, sender, sendResponse) {
+  if (request.message === 'HIGHLIGHT') {
+    highlight(request.json);
+  }
 }
 
-function handleError(error) {
-  console.log(`Error: ${error}`);
-}
-
-function notifyBackgroundPage(json) {
-  var sending = browser.runtime.sendMessage(json);
-  //console.log('request : source de confiance');
-  sending.then(handleResponse, handleError);
-}
+browser.runtime.onMessage.addListener(handleMessage);
 
 // (MODULE 3) HIGHLIGHT
 //-------------------------
