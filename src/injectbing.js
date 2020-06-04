@@ -19,17 +19,14 @@ function getSerp(storedSettings) {
     var resultjson = [];
     // fo each result, store id (from array index) and url (from href) in the resultjson array
     for (var i = 0; i < resultslist.length; i++) {
-      console.log(resultslist);
       if (resultslist[i].getElementsByTagName('h2').length) {
         //normal result
-        console.log(resultslist[i].querySelector('h2').getElementsByTagName('a'));
         if (resultslist[i].querySelector('h2').getElementsByTagName('a').length) {
           var elementurl = resultslist[i].querySelector('h2').querySelector('a').href;
           resultjson.push({
             id: i,
             url: elementurl,
           });
-          console.log(resultjson);
         } else if (resultslist[i].getElementsByClassName('b_title').length) {
           //knowledge box result (title)
           var elementurl = resultslist[i].querySelector('.b_title').querySelector('a').href;
@@ -53,7 +50,8 @@ function getSerp(storedSettings) {
       console.log('using ' + apiserver);
     }
     var requestjson = { request: querystring, results: resultjson, userAgent: window.navigator.userAgent, apiserver: apiserver, searchengine: 'bing', type: 'GET_SERP' };
-    notifyBackgroundPage(requestjson);
+    //notify background page
+    browser.runtime.sendMessage(requestjson);
   } else {
     console.log('extension is switched off');
   }
@@ -63,20 +61,13 @@ function getSerp(storedSettings) {
 //--------------------------
 // Send a single message to event listeners within the extension
 // Response will be processed in background.js and sent back through the handler
-function handleResponse(enrichedjson) {
-  //console.log(enrichedjson);
-  highlight(enrichedjson);
+function handleMessage(request, sender, sendResponse) {
+  if (request.message === 'HIGHLIGHT') {
+    highlight(request.json);
+  }
 }
 
-function handleError(error) {
-  console.log(`Error: ${error}`);
-}
-
-function notifyBackgroundPage(json) {
-  var sending = browser.runtime.sendMessage(json);
-  //console.log('request : source de confiance');
-  sending.then(handleResponse, handleError);
-}
+browser.runtime.onMessage.addListener(handleMessage);
 
 // (MODULE 3) HIGHLIGHT
 //-------------------------
@@ -94,7 +85,6 @@ function highlight(enrichedjson) {
   } else {
     var firstresult = true;
   }
-
   for (var i = 0; i < enrichedjson.length; i++) {
     if (enrichedjson[i].status == 'trusted') {
       resultslist[enrichedjson[i].id].classList.add('trusted');
