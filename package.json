@@ -1,7 +1,7 @@
 {
   "name": "sourcesdeconfiance",
-  "version": "1.0.7",
-  "description": "Sources de confiance est un complément aux moteurs de recherche pour identifier les sites publics, institutionnels et universitaires",
+  "version": "1.0.8",
+  "description": "Sources de confiance est un complément aux moteurs de recherche pour identifier les sites publics et universitaires",
   "author": "Michael Bideault <michael.bideault@villes-internet.net> & Jb Piacentino <jb@edtechone.com>",
   "engines": {
     "node": ">=10"
