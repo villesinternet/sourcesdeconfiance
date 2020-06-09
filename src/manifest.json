@@ -1,7 +1,7 @@
 {
   "name": "Sources de confiance",
   "description": "Sources de confiance est un complément aux moteurs de recherche pour identifier les sites publics et universitaires",
-  "version": "1.0.8",
+  "version": "1.0.42",
   "manifest_version": 2,
   "icons": {
     "24": "assets/icons/sdc-24.png",
@@ -33,6 +33,6 @@
       "js": ["browser-polyfill.js", "injectbing.js"]
     }
   ],
-  "permissions": ["activeTab", "storage"],
+  "permissions": ["activeTab", "storage", "https://www.google.com/search*", "https://www.google.fr/seach*", "https://www.qwant.com/*", "https://www.bing.com/search*"],
   "web_accessible_resources": ["assets/icons/*.png"]
 }

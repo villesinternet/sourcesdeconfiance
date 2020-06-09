@@ -8,7 +8,7 @@ var defaultsettings = {
   apiserver: 'https://sourcesdeconfiance.org/api/trusted',
 };
 
-const extensionversion = '1.0.8';
+const extensionversion = '1.0.42';
 
 function checkAPI() {
   var start_time = new Date().getTime();
@@ -21,7 +21,7 @@ function checkAPI() {
     if (xhr.status >= 200 && xhr.status < 300) {
       //LOGS FOR DEBUGGING
       var request_time = new Date().getTime() - start_time;
-      console.log('resolved in ' + request_time + 'ms');
+      console.log('Sources de confiance v' + extensionversion + ' - API check resolved in ' + request_time + 'ms');
       console.log(xhr.response);
     } else {
       console.log(xhr.statusText);
@@ -51,7 +51,7 @@ function checkStoredSettings(storedsettings) {
         browser.storage.local.set(storedsettings);
       } else {
         console.log(storedsettings);
-        console.log('everything up to date');
+        console.log('Sources de confiance v' + extensionversion + ' - everything up to date');
       }
     }
   }
@@ -108,3 +108,62 @@ function getActiveTab() {
 }
 
 browser.runtime.onMessage.addListener(handleMessage);
+
+// EXPERIMENTAL : getting results from google SERP directly in background script
+
+var getHTML = function(url, callback) {
+  // Feature detection
+  if (!window.XMLHttpRequest) return;
+  // Create new request
+  var xhr = new XMLHttpRequest();
+  // Setup callback
+  xhr.onload = function() {
+    if (callback && typeof callback === 'function') {
+      callback(this.responseXML);
+    }
+  };
+  // Get the HTML
+  xhr.open('GET', url);
+  xhr.responseType = 'document';
+  xhr.send();
+};
+
+function parseGoogle(doc) {
+  var resultslist = doc.getElementsByClassName('g');
+  var querystring = doc.getElementsByName('q')[0].value;
+  var resultjson = [];
+  for (var i = 0; i < resultslist.length; i++) {
+    var el = resultslist[i].getElementsByClassName('rc'); // test if result has expected child. prevents code from breaking when a special info box occurs.
+    if (el.length > 0 && !resultslist[i].classList.contains('kno-kp')) {
+      //quickfix do not analyse knowledge boxes. Could be a specific analysis instead
+      resultjson.push({
+        id: i,
+        url: resultslist[i]
+          .querySelector('.rc')
+          .querySelector('.r')
+          .querySelector('a').href,
+      });
+    }
+  }
+  console.log(doc.URL);
+  console.log(resultjson);
+  console.log(resultjson.length);
+  return resultjson;
+}
+
+var searchText = 'paris';
+var searchStart = 0;
+var searchUrl = 'https://www.google.fr/search?q=' + searchText + '&start=' + searchStart;
+getHTML(searchUrl, function(response) {
+  parseGoogle(response);
+});
+searchStart = 10;
+searchUrl = 'https://www.google.fr/search?q=' + searchText + '&start=' + searchStart;
+getHTML(searchUrl, function(response) {
+  parseGoogle(response);
+});
+searchStart = 20;
+searchUrl = 'https://www.google.fr/search?q=' + searchText + '&start=' + searchStart;
+getHTML(searchUrl, function(response) {
+  parseGoogle(response);
+});
