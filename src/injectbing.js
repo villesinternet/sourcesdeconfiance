@@ -86,6 +86,10 @@ function highlight(enrichedjson) {
     var firstresult = true;
   }
   for (var i = 0; i < enrichedjson.length; i++) {
+    if (enrichedjson[i].status == 'malevolent') {
+      var elem = resultslist[enrichedjson[i].id];
+      elem.style.display = 'none';
+    }
     if (enrichedjson[i].status == 'trusted') {
       resultslist[enrichedjson[i].id].classList.add('trusted');
       if (firstresult) {
