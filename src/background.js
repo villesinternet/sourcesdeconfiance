@@ -91,7 +91,9 @@ function handleMessage(json, sender, sendResponse) {
     console.log('Expected results number : ' + json.resultsPerPage);
     var searchText = json.request;
     var searchStart = json.nextResultIndex;
-    var searchUrl = 'https://www.google.fr/search?q=' + searchText + '&start=' + searchStart;
+    var resultsNumber = 50;
+    var searchUrl = 'https://www.google.fr/search?q=' + searchText + '&start=' + searchStart + '&num=' + resultsNumber.toString();
+    console.log(searchUrl);
     getHTML(searchUrl, function(response) {
       parseGoogle(response, json, function(resultsjson) {
         checkTrusted(resultsjson).then(
@@ -103,7 +105,76 @@ function handleMessage(json, sender, sendResponse) {
             console.log(Error);
           }
         );
-        //browser.tabs.sendMessage(sender.tab.id, { json: results, message: 'NEXT_RESULTS' });
+      });
+    });
+    // static test - deliberations knowledge box
+    console.log('Looking for deliberations');
+    searchText = searchText + '+délibération';
+    searchStart = 0;
+    resultsNumber = 10;
+    searchUrl = 'https://www.google.fr/search?q=' + searchText + '&start=' + searchStart + '&num=' + resultsNumber.toString();
+    console.log(searchUrl);
+    getHTML(searchUrl, function(response) {
+      parseGoogle(response, json, function(resultsjson) {
+        checkTrusted(resultsjson).then(
+          function(enrichedjson) {
+            //send next trusted results back to inject.js
+            let trusteds = enrichedjson.filter(filterTrusted);
+            console.log(trusteds);
+            console.log('found ' + trusteds.length + ' trusteds on ' + enrichedjson.length + ' total results');
+            browser.tabs.sendMessage(sender.tab.id, { json: enrichedjson, message: 'KB_DELIB' });
+          },
+          function(Error) {
+            console.log(Error);
+          }
+        );
+      });
+    });
+    // static test - legifrance knowledge box
+    console.log('Looking for legifrance results');
+    searchText = json.request;
+    searchStart = 0;
+    resultsNumber = 10;
+    searchUrl = 'https://www.google.fr/search?q=' + searchText + '&start=' + searchStart + '&num=' + resultsNumber.toString() + '&as_sitesearch=legifrance.gouv.fr';
+    console.log(searchUrl);
+    getHTML(searchUrl, function(response) {
+      parseGoogle(response, json, function(resultsjson) {
+        checkTrusted(resultsjson).then(
+          function(enrichedjson) {
+            //send next trusted results back to inject.js
+            let trusteds = enrichedjson.filter(filterTrusted);
+            console.log(trusteds);
+            console.log('found ' + trusteds.length + ' trusteds on ' + enrichedjson.length + ' total results');
+            browser.tabs.sendMessage(sender.tab.id, { json: enrichedjson, message: 'KB_LOI' });
+          },
+          function(Error) {
+            console.log(Error);
+          }
+        );
+      });
+    });
+    // static test - state results knowledge box
+    console.log('Looking for legifrance results');
+    searchText = json.request;
+    searchStart = 0;
+    resultsNumber = 10;
+    searchUrl = 'https://www.google.fr/search?q=' + searchText + '&start=' + searchStart + '&num=' + resultsNumber.toString() + '&as_sitesearch=gouv.fr';
+    console.log(searchUrl);
+    getHTML(searchUrl, function(response) {
+      console.log(response);
+      parseGoogle(response, json, function(resultsjson) {
+        checkTrusted(resultsjson).then(
+          function(enrichedjson) {
+            //send next trusted results back to inject.js
+            let trusteds = enrichedjson.filter(filterTrusted);
+            console.log(trusteds);
+            console.log('found ' + trusteds.length + ' trusteds on ' + enrichedjson.length + ' total results');
+            browser.tabs.sendMessage(sender.tab.id, { json: enrichedjson, message: 'KB_GOUV' });
+          },
+          function(Error) {
+            console.log(Error);
+          }
+        );
       });
     });
   }
@@ -140,10 +211,9 @@ function parseGoogle(doc, json, callback) {
       //quickfix do not analyse knowledge boxes. Could be a specific analysis instead
       results.push({
         id: i,
-        url: resultslist[i]
-          .querySelector('.rc')
-          .querySelector('.r')
-          .querySelector('a').href,
+        url: resultslist[i].querySelector('.rc .r a').href,
+        name: resultslist[i].querySelector('.rc .r h3').innerText,
+        snippet: resultslist[i].querySelector('.rc .s .st').innerText,
       });
     }
   }
@@ -183,4 +253,8 @@ function checkTrusted(json) {
     xhr.onerror = () => reject(xhr.statusText);
     xhr.send(JSON.stringify(json));
   });
+}
+
+function filterTrusted(el) {
+  return el.status == 'trusted';
 }

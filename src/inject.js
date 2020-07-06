@@ -105,6 +105,18 @@ function handleMessage(request, sender, sendResponse) {
     console.log('Next trusted results :');
     console.log(request.json.filter(filterTrusted));
   }
+  if (request.message === 'KB_DELIB') {
+    console.log('Deliberations :');
+    console.log(request.json.filter(filterTrusted));
+  }
+  if (request.message === 'KB_LOI') {
+    console.log('Lois :');
+    console.log(request.json.filter(filterTrusted));
+  }
+  if (request.message === 'KB_GOUV') {
+    console.log('Gouv :');
+    console.log(request.json.filter(filterTrusted));
+  }
 }
 
 browser.runtime.onMessage.addListener(handleMessage);
@@ -150,6 +162,7 @@ function highlight(enrichedjson) {
       }
     }
   }
+
   var pictourl = browser.runtime.getURL('assets/icons/sdc-24.png');
   // CSS injection - Define style for .trusted class
   var newstyles = `
