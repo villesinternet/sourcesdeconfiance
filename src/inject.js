@@ -36,9 +36,52 @@ function getSerp(storedSettings) {
       apiserver = storedSettings.apiserver;
       console.log('using ' + apiserver);
     }
-    var requestjson = { request: querystring, results: resultjson, userAgent: window.navigator.userAgent, apiserver: apiserver, searchengine: 'google', type: 'GET_SERP' };
+
+    // Calculate results per page
+    var results = document.querySelectorAll('.g .rc');
+    var startResult = 0;
+    var currentPage = 1;
+    var resultsPerPage = 10;
+    var url = new URL(window.location.href);
+    if (window.location.href.indexOf('?start=') != -1 || window.location.href.indexOf('&start=') != -1) {
+      var startResult = parseInt(url.searchParams.get('start'));
+      var currentPage = 1 + startResult / resultsPerPage;
+    }
+    if (currentPage == 1 && results.length > 10) {
+      //quickfix for first SERP results number variable due to knowledge boxes
+      resultsPerPage = Math.round(results.length / 10) * 10;
+    }
+    var nextResultIndex = resultsPerPage + startResult;
+
+    var requestjson = {
+      request: querystring,
+      results: resultjson,
+      userAgent: window.navigator.userAgent,
+      apiserver: apiserver,
+      searchengine: 'google',
+      resultsPerPage: resultsPerPage,
+      currentPage: currentPage,
+      nextResultIndex: nextResultIndex,
+      type: 'GET_SERP',
+    };
     //notify background page
     browser.runtime.sendMessage(requestjson);
+    //test results search on page 2
+    console.log('startResult ' + startResult);
+    console.log('resultsPerPage : ' + resultsPerPage);
+    console.log('currentPage : ' + currentPage);
+    console.log('Next result index : ' + nextResultIndex);
+    var testjson = {
+      request: querystring,
+      userAgent: window.navigator.userAgent,
+      apiserver: apiserver,
+      searchengine: 'google',
+      resultsPerPage: resultsPerPage,
+      currentPage: currentPage,
+      nextResultIndex: nextResultIndex,
+      type: 'GET_NEXT_RESULTS',
+    };
+    browser.runtime.sendMessage(testjson);
   } else {
     console.log('extension is switched off');
   }
@@ -48,9 +91,19 @@ function getSerp(storedSettings) {
 //--------------------------
 // Send a single message to event listeners within the extension
 // Response will be processed in background.js and sent back through the handler
+function filterTrusted(el) {
+  return el.status == 'trusted';
+}
+
 function handleMessage(request, sender, sendResponse) {
   if (request.message === 'HIGHLIGHT') {
     highlight(request.json);
+  }
+  if (request.message === 'NEXT_RESULTS') {
+    console.log('Next results :');
+    console.log(request.json);
+    console.log('Next trusted results :');
+    console.log(request.json.filter(filterTrusted));
   }
 }
 

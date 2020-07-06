@@ -10,6 +10,8 @@ var defaultsettings = {
 
 const extensionversion = '1.0.42';
 
+browser.runtime.onMessage.addListener(handleMessage);
+
 function checkAPI() {
   var start_time = new Date().getTime();
   var dailyhello = { version: extensionversion, userAgent: window.navigator.userAgent };
@@ -30,15 +32,19 @@ function checkAPI() {
   xhr.onerror = () => reject(xhr.statusText);
   xhr.send(JSON.stringify(dailyhello));
 }
-//
+
 function checkStoredSettings(storedsettings) {
   // COULD BE FACTORIZED
   var today = new Date();
   if (!storedsettings.extensionswitch) {
     defaultsettings.lastcheck = today;
     checkAPI();
+    browser.browserAction.setIcon({ path: '../assets/icons/sdc-48.png' });
     browser.storage.local.set(defaultsettings);
   } else {
+    if (storedsettings.extensionswitch == 'off') {
+      browser.browserAction.setIcon({ path: '../assets/icons/sdc-off-48.png' });
+    }
     if (!storedsettings.lastcheck) {
       storedsettings.lastcheck = today;
       checkAPI();
@@ -69,36 +75,36 @@ getStoredSettings.then(checkStoredSettings, onError);
 //------------------------------
 function handleMessage(json, sender, sendResponse) {
   if (json.type == 'GET_SERP') {
-    var start_time = new Date().getTime();
-    return new Promise((resolve, reject) => {
-      var url = 'https://sourcesdeconfiance.org/api/trusted';
-      if (json.apiserver) {
-        url = json.apiserver;
-        delete json.apiserver;
-        delete json.type;
+    checkTrusted(json).then(
+      function(enrichedjson) {
+        browser.tabs.sendMessage(sender.tab.id, { json: enrichedjson, message: 'HIGHLIGHT' });
+      },
+      function(Error) {
+        console.log(Error);
       }
-      json.version = extensionversion;
-      let xhr = new XMLHttpRequest();
-      xhr.open('POST', url, true);
-      xhr.setRequestHeader('Content-Type', 'data/json');
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          //LOGS FOR DEBUGGING
-          var request_time = new Date().getTime() - start_time;
-          console.log('resolved in ' + request_time + 'ms');
-          console.log(xhr.response);
-          var enrichedjson = JSON.parse(xhr.response).data.results;
-
-          browser.tabs.sendMessage(sender.tab.id, { json: enrichedjson, message: 'HIGHLIGHT' });
-        } else {
-          console.log(xhr.statusText);
-          console.log(xhr);
-          reject(xhr.statusText);
-        }
-      };
-      console.log(JSON.stringify(json));
-      xhr.onerror = () => reject(xhr.statusText);
-      xhr.send(JSON.stringify(json));
+    );
+  }
+  if (json.type == 'GET_NEXT_RESULTS') {
+    console.log('Searching next results');
+    console.log(json.request);
+    console.log('Next result index : ' + json.nextResultIndex);
+    console.log('Expected results number : ' + json.resultsPerPage);
+    var searchText = json.request;
+    var searchStart = json.nextResultIndex;
+    var searchUrl = 'https://www.google.fr/search?q=' + searchText + '&start=' + searchStart;
+    getHTML(searchUrl, function(response) {
+      parseGoogle(response, json, function(resultsjson) {
+        checkTrusted(resultsjson).then(
+          function(enrichedjson) {
+            //send next trusted results back to inject.js
+            browser.tabs.sendMessage(sender.tab.id, { json: enrichedjson, message: 'NEXT_RESULTS' });
+          },
+          function(Error) {
+            console.log(Error);
+          }
+        );
+        //browser.tabs.sendMessage(sender.tab.id, { json: results, message: 'NEXT_RESULTS' });
+      });
     });
   }
 }
@@ -106,10 +112,6 @@ function handleMessage(json, sender, sendResponse) {
 function getActiveTab() {
   return browser.tabs.query({ active: true, currentWindow: true });
 }
-
-browser.runtime.onMessage.addListener(handleMessage);
-
-// EXPERIMENTAL : getting results from google SERP directly in background script
 
 var getHTML = function(url, callback) {
   // Feature detection
@@ -128,15 +130,15 @@ var getHTML = function(url, callback) {
   xhr.send();
 };
 
-function parseGoogle(doc) {
+function parseGoogle(doc, json, callback) {
   var resultslist = doc.getElementsByClassName('g');
   var querystring = doc.getElementsByName('q')[0].value;
-  var resultjson = [];
+  var results = [];
   for (var i = 0; i < resultslist.length; i++) {
     var el = resultslist[i].getElementsByClassName('rc'); // test if result has expected child. prevents code from breaking when a special info box occurs.
     if (el.length > 0 && !resultslist[i].classList.contains('kno-kp')) {
       //quickfix do not analyse knowledge boxes. Could be a specific analysis instead
-      resultjson.push({
+      results.push({
         id: i,
         url: resultslist[i]
           .querySelector('.rc')
@@ -145,25 +147,40 @@ function parseGoogle(doc) {
       });
     }
   }
-  console.log(doc.URL);
-  console.log(resultjson);
-  console.log(resultjson.length);
-  return resultjson;
+  var resultjson = json;
+  resultjson.results = results;
+  callback(resultjson);
 }
 
-var searchText = 'paris';
-var searchStart = 0;
-var searchUrl = 'https://www.google.fr/search?q=' + searchText + '&start=' + searchStart;
-getHTML(searchUrl, function(response) {
-  parseGoogle(response);
-});
-searchStart = 10;
-searchUrl = 'https://www.google.fr/search?q=' + searchText + '&start=' + searchStart;
-getHTML(searchUrl, function(response) {
-  parseGoogle(response);
-});
-searchStart = 20;
-searchUrl = 'https://www.google.fr/search?q=' + searchText + '&start=' + searchStart;
-getHTML(searchUrl, function(response) {
-  parseGoogle(response);
-});
+function checkTrusted(json) {
+  var start_time = new Date().getTime();
+  return new Promise((resolve, reject) => {
+    var url = 'https://sourcesdeconfiance.org/api/trusted';
+    if (json.apiserver) {
+      url = json.apiserver;
+      delete json.apiserver;
+      delete json.type;
+    }
+    json.version = extensionversion;
+    let xhr = new XMLHttpRequest();
+    xhr.open('POST', url, true);
+    xhr.setRequestHeader('Content-Type', 'data/json');
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        //LOGS FOR DEBUGGING
+        var request_time = new Date().getTime() - start_time;
+        console.log('resolved in ' + request_time + 'ms');
+        console.log(xhr.response);
+        var enrichedjson = JSON.parse(xhr.response).data.results;
+        resolve(enrichedjson);
+      } else {
+        console.log(xhr.statusText);
+        console.log(xhr);
+        reject(xhr.statusText);
+      }
+    };
+    console.log(JSON.stringify(json));
+    xhr.onerror = () => reject(xhr.statusText);
+    xhr.send(JSON.stringify(json));
+  });
+}
