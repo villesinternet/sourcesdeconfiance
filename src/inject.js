@@ -8,6 +8,35 @@ function onError(e) {
   console.error(e);
 }
 
+// EDIT SERP INTERFACE FOR SDC
+function addElement() {
+  var sdcButton = document.createElement('a');
+  sdcButton.id = 'sdc';
+  sdcButton.setAttribute('class', 'hdtb-mitem');
+  var newContent = document.createTextNode('Sources de confiance');
+  sdcButton.appendChild(newContent);
+  sdcButton.addEventListener('click', sdcFrame);
+  var currentDiv = document.getElementById('hdtb-msb');
+  currentDiv.appendChild(sdcButton);
+}
+
+addElement();
+function sdcFrame() {
+  var selectedMenuItem = document.getElementsByClassName('hdtb-msel');
+  if (selectedMenuItem.length > 0) {
+    selectedMenuItem[0].classList.remove('hdtb-msel');
+  }
+  document.getElementById('sdc').classList.add('hdtb-msel');
+  document.getElementById('appbar').remove();
+  var node = document.getElementById('rcnt');
+  node.querySelectorAll('*').forEach(n => n.remove());
+  var sdcR = document.createElement('p');
+  sdcR.appendChild(document.createTextNode('Hello world !'));
+  node.appendChild(sdcR);
+
+  document.getElementById('footcnt').remove();
+}
+
 // (MODULE 1) GET SERP RESULTS
 //----------------------------
 // Scrap the Search Engine Result Page and send request to the filter module
@@ -164,8 +193,23 @@ function highlight(enrichedjson) {
   }
 
   var pictourl = browser.runtime.getURL('assets/icons/sdc-24.png');
+  var pictooffurl = browser.runtime.getURL('assets/icons/sdc-off-24.png');
+
   // CSS injection - Define style for .trusted class
   var newstyles = `
+    a#sdc {
+      cursor: pointer;
+    }
+    a#sdc:before {
+      content: " ";
+      color: #44ba3a;
+      width:24px;
+      height:24px;
+      display:block;
+      float:left;
+      background-image:url(${pictooffurl});
+    }
+
     .g.trusted {
    }
 
