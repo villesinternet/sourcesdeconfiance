@@ -1,3 +1,36 @@
+import Vue from 'vue';
+import Agregator from './AgregatorVue';
+
+// Shared agreates data with Vue view (getters & setters)
+var agregates = {
+  get a() {
+    return agregateTab.agregates;
+  },
+  set a(b) {
+    app.agregates = b;
+  },
+};
+
+// Sample for testing
+agregates = [0, 1, 2];
+
+// Create our own space for agregation display
+const div = document.createElement('div');
+// Insert our space in Google's navbar
+document.getElementById('hdtb-msb-vis').append(div);
+
+// Start the Vue engine for our space
+var agregateTab = new Vue({
+  el: div,
+  render: h => {
+    return h(Agregator, {
+      props: {
+        agregates: agregates,
+      },
+    });
+  },
+});
+
 // INITIALIZATION
 
 var browser = require('webextension-polyfill');
