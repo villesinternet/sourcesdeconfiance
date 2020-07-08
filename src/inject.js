@@ -12,7 +12,7 @@ var agregates = {
 };
 
 // Sample for testing
-agregates = [0, 1, 2];
+agregates = [0, 1, 'b', 'c'];
 
 // Create our own space for agregation display
 const div = document.createElement('div');
