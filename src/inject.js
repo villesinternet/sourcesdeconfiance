@@ -1,5 +1,56 @@
-// INITIALIZATION
+import Vue from 'vue';
+import SdcTab from './sdcTab';
+import SdcFrame from './sdcFrame';
 
+// Start the Vue engine for our space
+//
+// First the agregate frame itself
+// Shared agreates data with Vue view (getters & setters)
+// var agregates = {
+//   get a() {
+//     return frameVue.agregates;
+//   },
+//   set a(b) {
+//     console.log('dans laffectation');
+//     frameVue.agregates = b;
+//   },
+// };
+
+export var agregates = [1, 2, 3];
+
+const frameDiv = document.createElement('div');
+document.getElementById('cnt').append(frameDiv);
+var frameVue = new Vue({
+  el: frameDiv,
+  render: h => {
+    // return h(SdcFrame, {
+    //   props: {
+    //     agregates: agregates
+    //   }
+    // });
+    return h(SdcFrame);
+  },
+});
+
+// Then the menu Tab
+const menuDiv = document.createElement('div');
+document.getElementById('hdtb-msb-vis').append(menuDiv);
+var tabVue = new Vue({
+  el: menuDiv,
+  render: h => {
+    return h(SdcTab, {
+      props: {
+        frameVue: frameVue,
+      },
+    });
+  },
+});
+
+export function getFilteredResults() {
+  console.log('agregates=' + agregates);
+}
+
+// INITIALIZATION
 var browser = require('webextension-polyfill');
 
 const getStoredSettings = browser.storage.local.get();
@@ -9,33 +60,33 @@ function onError(e) {
 }
 
 // EDIT SERP INTERFACE FOR SDC
-function addElement() {
-  var sdcButton = document.createElement('a');
-  sdcButton.id = 'sdc';
-  sdcButton.setAttribute('class', 'hdtb-mitem');
-  var newContent = document.createTextNode('Sources de confiance');
-  sdcButton.appendChild(newContent);
-  sdcButton.addEventListener('click', sdcFrame);
-  var currentDiv = document.getElementById('hdtb-msb');
-  currentDiv.appendChild(sdcButton);
-}
+// function addElement() {
+//   var sdcButton = document.createElement('a');
+//   sdcButton.id = 'sdc';
+//   sdcButton.setAttribute('class', 'hdtb-mitem');
+//   var newContent = document.createTextNode('Sources de confiance');
+//   sdcButton.appendChild(newContent);
+//   sdcButton.addEventListener('click', sdcFrame);
+//   var currentDiv = document.getElementById('hdtb-msb');
+//   currentDiv.appendChild(sdcButton);
+// }
 
-addElement();
-function sdcFrame() {
-  var selectedMenuItem = document.getElementsByClassName('hdtb-msel');
-  if (selectedMenuItem.length > 0) {
-    selectedMenuItem[0].classList.remove('hdtb-msel');
-  }
-  document.getElementById('sdc').classList.add('hdtb-msel');
-  document.getElementById('appbar').remove();
-  var node = document.getElementById('rcnt');
-  node.querySelectorAll('*').forEach(n => n.remove());
-  var sdcR = document.createElement('p');
-  sdcR.appendChild(document.createTextNode('Hello world !'));
-  node.appendChild(sdcR);
+//addElement();
+// function sdcFrame() {
+//   var selectedMenuItem = document.getElementsByClassName('hdtb-msel');
+//   if (selectedMenuItem.length > 0) {
+//     selectedMenuItem[0].classList.remove('hdtb-msel');
+//   }
+//   document.getElementById('sdc').classList.add('hdtb-msel');
+//   document.getElementById('appbar').remove();
+//   var node = document.getElementById('rcnt');
+//   node.querySelectorAll('*').forEach(n => n.remove());
+//   var sdcR = document.createElement('p');
+//   sdcR.appendChild(document.createTextNode('Hello world !'));
+//   node.appendChild(sdcR);
 
-  document.getElementById('footcnt').remove();
-}
+//   document.getElementById('footcnt').remove();
+// }
 
 // (MODULE 1) GET SERP RESULTS
 //----------------------------
@@ -194,105 +245,112 @@ function highlight(enrichedjson) {
 
   var pictourl = browser.runtime.getURL('assets/icons/sdc-24.png');
   var pictooffurl = browser.runtime.getURL('assets/icons/sdc-off-24.png');
+  var sdcCss = browser.runtime.getURL('assets/styles/sdc.css');
+  console.log(sdcCss);
 
-  // CSS injection - Define style for .trusted class
-  var newstyles = `
-    a#sdc {
-      cursor: pointer;
-    }
-    a#sdc:before {
-      content: " ";
-      color: #44ba3a;
-      width:24px;
-      height:24px;
-      display:block;
-      float:left;
-      background-image:url(${pictooffurl});
-    }
-
-    .g.trusted {
-   }
-
-    .trusted cite {
-      color: #34a853;
-    }
-
-    .trusted:before {
-      content: " ";
-      color: #44ba3a;
-      width:24px;
-      height:24px;
-      display:block;
-      float:left;
-      margin-left:-26px;
-      background-image:url(${pictourl});
-    }
-    .g.trustedfirst {
-      padding: 16px 5px 5px 16px;
-      border: 1px solid #dfe1e5;
-      border-radius: 8px;
-      box-shadow: none;
-      width:630px;    }
-      .trustedfirst cite {
-        color: #34a853;
-      }
-      .trustedfirst:before {
-        content: " ";
-        color: #44ba3a;
-        width:24px;
-        /* height:40px; */
-        height:24px;
-        display:block;
-        float:right;
-        margin-left:-15px;
-        margin-top:-17px;
-        background-image:url(${pictourl});
-      }
-      /* Tooltip container */
-      .tooltip {
-       position: relative;
-       display: inline-block;
-      }
-      /* Tooltip text */
-      .tooltip .tooltiptext {
-       visibility: hidden;
-       width: 150px;
-       background-color: #BBB;
-       color: #fff;
-       text-align: center;
-       padding: 5px 0;
-       border-radius: 6px;
-       /* Position the tooltip text */
-       position: absolute;
-       z-index: 1;
-       bottom: 100%;
-       left: 100%;
-       margin-left: -92px;
-       margin-bottom: 6px;
-       /* Fade in tooltip */
-       opacity: 0;
-       transition: opacity 0.3s;
-      }
-      /* Tooltip arrow */
-      .tooltip .tooltiptext::after {
-       content: "";
-       position: absolute;
-       top: 100%;
-       left: 50%;
-       margin-left: -5px;
-       border-width: 5px;
-       border-style: solid;
-       border-color: #BBB transparent transparent transparent;
-      }
-      /* Show the tooltip text when you mouse over the tooltip container */
-      .tooltip:hover .tooltiptext {
-       visibility: visible;
-       opacity: 1;
-      }
-    `;
-
-  var styleSheet = document.createElement('style');
+  // <link href="/static/build/styles/react-header.78d662924939.css" rel="stylesheet" type="text/css">
+  var styleSheet = document.createElement('link');
+  styleSheet.href = sdcCss;
+  styleSheet.rel = 'stylesheet';
   styleSheet.type = 'text/css';
-  styleSheet.innerText = newstyles;
   document.head.appendChild(styleSheet);
+  // CSS injection - Define style for .trusted class
+  // var newstyles = `
+  //   a#sdc {
+  //     cursor: pointer;
+  //   }
+  //   a#sdc:before {
+  //     content: " ";
+  //     color: #44ba3a;
+  //     width:24px;
+  //     height:24px;
+  //     display:block;
+  //     float:left;
+  //     background-image:url(${pictooffurl});
+  //   }
+
+  //   .g.trusted {
+  //  }
+
+  //   .trusted cite {
+  //     color: #34a853;
+  //   }
+
+  //   .trusted:before {
+  //     content: " ";
+  //     color: #44ba3a;
+  //     width:24px;
+  //     height:24px;
+  //     display:block;
+  //     float:left;
+  //     margin-left:-26px;
+  //     background-image:url(${pictourl});
+  //   }
+  //   .g.trustedfirst {
+  //     padding: 16px 5px 5px 16px;
+  //     border: 1px solid #dfe1e5;
+  //     border-radius: 8px;
+  //     box-shadow: none;
+  //     width:630px;    }
+  //     .trustedfirst cite {
+  //       color: #34a853;
+  //     }
+  //     .trustedfirst:before {
+  //       content: " ";
+  //       color: #44ba3a;
+  //       width:24px;
+  //       /* height:40px; */
+  //       height:24px;
+  //       display:block;
+  //       float:right;
+  //       margin-left:-15px;
+  //       margin-top:-17px;
+  //       background-image:url(${pictourl});
+  //     }
+  //     /* Tooltip container */
+  //     .tooltip {
+  //      position: relative;
+  //      display: inline-block;
+  //     }
+  //     /* Tooltip text */
+  //     .tooltip .tooltiptext {
+  //      visibility: hidden;
+  //      width: 150px;
+  //      background-color: #BBB;
+  //      color: #fff;
+  //      text-align: center;
+  //      padding: 5px 0;
+  //      border-radius: 6px;
+  //      /* Position the tooltip text */
+  //      position: absolute;
+  //      z-index: 1;
+  //      bottom: 100%;
+  //      left: 100%;
+  //      margin-left: -92px;
+  //      margin-bottom: 6px;
+  //      /* Fade in tooltip */
+  //      opacity: 0;
+  //      transition: opacity 0.3s;
+  //     }
+  //     /* Tooltip arrow */
+  //     .tooltip .tooltiptext::after {
+  //      content: "";
+  //      position: absolute;
+  //      top: 100%;
+  //      left: 50%;
+  //      margin-left: -5px;
+  //      border-width: 5px;
+  //      border-style: solid;
+  //      border-color: #BBB transparent transparent transparent;
+  //     }
+  //     /* Show the tooltip text when you mouse over the tooltip container */
+  //     .tooltip:hover .tooltiptext {
+  //      visibility: visible;
+  //      opacity: 1;
+  //     }
+  //   `;
+  // var styleSheet = document.createElement('style');
+  // styleSheet.type = 'text/css';
+  // styleSheet.innerText = sdcStyles;
+  // document.head.appendChild(styleSheet);
 }

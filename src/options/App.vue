@@ -17,6 +17,10 @@ export default {
 </script>
 
 <style scoped>
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 h2 {
   font-size: 18px;
   font-weight: bold;
