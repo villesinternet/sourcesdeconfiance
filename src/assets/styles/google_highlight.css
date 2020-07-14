@@ -1,0 +1,93 @@
+a#sdc {
+  cursor: pointer;
+}
+a#sdc:before {
+  content: ' ';
+  color: #44ba3a;
+  width: 24px;
+  height: 24px;
+  display: block;
+  float: left;
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH5AQDBTIOqjdBhwAAAhtJREFUSMfVlUtoE1EUhr/JpImJC6tFTCpqbVdVigunFiNVO4KIO5HRjSIiBcF2U4RYiqJBaa0gxJUrF4LdTERwJYKjYJFAx4VaVCyGBN9KtMSE1LyumzrU4jTPjWc25/x38d05/7n3SiwKVVceArupLR4Zmtm3UHBQZ0jzn13UBcgWsmzzB/B5/bYQZz0737thP+e3jwOwJ9Ld2D/4mUsx0nPRqucK2cYBCqUCZ3pCNDlcAFx9egmP01s94N8GSqxwN3Og4xAAs79+EJmZQCCqA+SKOXa07iLQupN8KW/p6XyKy73XrDr4eBBv03LbTdqa3NmymQuBK1YL7sZuI0syvWv76FzVBcDU5ygvky9wya7qx/Rj+oOVD20dwef1k8mnGe4OWXooGsQtu5f0yxYwV8gyYBy36pv77nBqyxAtntUAXH8eJpPP2Pa+LEAgmE4+I/JmAgCX7OLopn4AiqUit17fQJKkshO35BTJkszo1Dnezs78pQcnB8q2puJz0OxeyckHR6z61fdpop8mEUI0BvCnXcfuHQTg7JPTLJM9FR/KygBCEE/FOHH/MMnst7LG1nRVOB1O4qkYDqm626Xu9+C/AnwF2oGNwJdGA4YNzVwDxIGEoZk+INgIwHugzdDMMVVXMDRTGJop5vNxoA14VytgzNDMdUACwNBMa2FBnjA0cz0wWnGjVV0Jq7rSUa2Zqq60q7oSXqz/BpVTqtRy8etcAAAAAElFTkSuQmCC);
+}
+
+.g.trusted {
+}
+
+.trusted cite {
+  color: #34a853;
+}
+
+.trusted:before {
+  content: ' ';
+  color: #44ba3a;
+  width: 24px;
+  height: 24px;
+  display: block;
+  float: left;
+  margin-left: -26px;
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH5AQDBTIOqjdBhwAAAhtJREFUSMfVlUtoE1EUhr/JpImJC6tFTCpqbVdVigunFiNVO4KIO5HRjSIiBcF2U4RYiqJBaa0gxJUrF4LdTERwJYKjYJFAx4VaVCyGBN9KtMSE1LyumzrU4jTPjWc25/x38d05/7n3SiwKVVceArupLR4Zmtm3UHBQZ0jzn13UBcgWsmzzB/B5/bYQZz0737thP+e3jwOwJ9Ld2D/4mUsx0nPRqucK2cYBCqUCZ3pCNDlcAFx9egmP01s94N8GSqxwN3Og4xAAs79+EJmZQCCqA+SKOXa07iLQupN8KW/p6XyKy73XrDr4eBBv03LbTdqa3NmymQuBK1YL7sZuI0syvWv76FzVBcDU5ygvky9wya7qx/Rj+oOVD20dwef1k8mnGe4OWXooGsQtu5f0yxYwV8gyYBy36pv77nBqyxAtntUAXH8eJpPP2Pa+LEAgmE4+I/JmAgCX7OLopn4AiqUit17fQJKkshO35BTJkszo1Dnezs78pQcnB8q2puJz0OxeyckHR6z61fdpop8mEUI0BvCnXcfuHQTg7JPTLJM9FR/KygBCEE/FOHH/MMnst7LG1nRVOB1O4qkYDqm626Xu9+C/AnwF2oGNwJdGA4YNzVwDxIGEoZk+INgIwHugzdDMMVVXMDRTGJop5vNxoA14VytgzNDMdUACwNBMa2FBnjA0cz0wWnGjVV0Jq7rSUa2Zqq60q7oSXqz/BpVTqtRy8etcAAAAAElFTkSuQmCC);
+}
+.g.trustedfirst {
+  padding: 16px 5px 5px 16px;
+  border: 1px solid #dfe1e5;
+  border-radius: 8px;
+  box-shadow: none;
+  width: 630px;
+}
+.trustedfirst cite {
+  color: #34a853;
+}
+.trustedfirst:before {
+  content: ' ';
+  color: #44ba3a;
+  width: 24px;
+  /* height:40px; */
+  height: 24px;
+  display: block;
+  float: right;
+  margin-left: -15px;
+  margin-top: -17px;
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH5AQDBTIOqjdBhwAAAhtJREFUSMfVlUtoE1EUhr/JpImJC6tFTCpqbVdVigunFiNVO4KIO5HRjSIiBcF2U4RYiqJBaa0gxJUrF4LdTERwJYKjYJFAx4VaVCyGBN9KtMSE1LyumzrU4jTPjWc25/x38d05/7n3SiwKVVceArupLR4Zmtm3UHBQZ0jzn13UBcgWsmzzB/B5/bYQZz0737thP+e3jwOwJ9Ld2D/4mUsx0nPRqucK2cYBCqUCZ3pCNDlcAFx9egmP01s94N8GSqxwN3Og4xAAs79+EJmZQCCqA+SKOXa07iLQupN8KW/p6XyKy73XrDr4eBBv03LbTdqa3NmymQuBK1YL7sZuI0syvWv76FzVBcDU5ygvky9wya7qx/Rj+oOVD20dwef1k8mnGe4OWXooGsQtu5f0yxYwV8gyYBy36pv77nBqyxAtntUAXH8eJpPP2Pa+LEAgmE4+I/JmAgCX7OLopn4AiqUit17fQJKkshO35BTJkszo1Dnezs78pQcnB8q2puJz0OxeyckHR6z61fdpop8mEUI0BvCnXcfuHQTg7JPTLJM9FR/KygBCEE/FOHH/MMnst7LG1nRVOB1O4qkYDqm626Xu9+C/AnwF2oGNwJdGA4YNzVwDxIGEoZk+INgIwHugzdDMMVVXMDRTGJop5vNxoA14VytgzNDMdUACwNBMa2FBnjA0cz0wWnGjVV0Jq7rSUa2Zqq60q7oSXqz/BpVTqtRy8etcAAAAAElFTkSuQmCC);
+}
+/* Tooltip container */
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+/* Tooltip text */
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 150px;
+  background-color: #bbb;
+  color: #fff;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+  /* Position the tooltip text */
+  position: absolute;
+  z-index: 1;
+  bottom: 100%;
+  left: 100%;
+  margin-left: -92px;
+  margin-bottom: 6px;
+  /* Fade in tooltip */
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+/* Tooltip arrow */
+.tooltip .tooltiptext::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #bbb transparent transparent transparent;
+}
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}

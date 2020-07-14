@@ -11,9 +11,9 @@ const config = {
   context: __dirname + '/src',
   entry: {
     background: './background.js',
-    inject: './inject.js',
-    injectqw: './injectqw.js',
-    injectbing: './injectbing.js',
+    google: './google.js',
+    qwant: './qwant.js',
+    bing: './bing.js',
     'popup/popup': './popup/popup.js',
     'options/options': './options/options.js',
   },

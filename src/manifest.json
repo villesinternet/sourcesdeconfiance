@@ -22,17 +22,18 @@
   "content_scripts": [
     {
       "matches": ["https://www.google.com/search*", "https://www.google.fr/search*"],
-      "js": ["browser-polyfill.js", "inject.js"]
+      "js": ["browser-polyfill.js", "google.js"],
+      "css": ["google.css"]
     },
     {
       "matches": ["https://www.qwant.com/*"],
-      "js": ["browser-polyfill.js", "injectqw.js"]
+      "js": ["browser-polyfill.js", "qwant.js"]
     },
     {
       "matches": ["https://www.bing.com/search*"],
-      "js": ["browser-polyfill.js", "injectbing.js"]
+      "js": ["browser-polyfill.js", "bing.js"]
     }
   ],
   "permissions": ["activeTab", "storage", "https://www.google.com/search*", "https://www.google.fr/seach*", "https://www.qwant.com/*", "https://www.bing.com/search*"],
-  "web_accessible_resources": ["assets/icons/*.png"]
+  " web_accessible_resources": ["assets/icons/*.png", "assets/logos/*.png"]
 }

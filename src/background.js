@@ -64,7 +64,7 @@ function checkStoredSettings(storedsettings) {
 }
 
 function onError(e) {
-  console.error(e);
+  console.error(`Error: ${e}`);
 }
 
 const getStoredSettings = browser.storage.local.get();
@@ -107,76 +107,76 @@ function handleMessage(json, sender, sendResponse) {
         );
       });
     });
-    // static test - deliberations knowledge box
-    console.log('Looking for deliberations');
-    searchText = searchText + '+délibération';
-    searchStart = 0;
-    resultsNumber = 10;
-    searchUrl = 'https://www.google.fr/search?q=' + searchText + '&start=' + searchStart + '&num=' + resultsNumber.toString();
-    console.log(searchUrl);
-    getHTML(searchUrl, function(response) {
-      parseGoogle(response, json, function(resultsjson) {
-        checkTrusted(resultsjson).then(
-          function(enrichedjson) {
-            //send next trusted results back to inject.js
-            let trusteds = enrichedjson.filter(filterTrusted);
-            console.log(trusteds);
-            console.log('found ' + trusteds.length + ' trusteds on ' + enrichedjson.length + ' total results');
-            browser.tabs.sendMessage(sender.tab.id, { json: enrichedjson, message: 'KB_DELIB' });
-          },
-          function(Error) {
-            console.log(Error);
-          }
-        );
-      });
-    });
-    // static test - legifrance knowledge box
-    console.log('Looking for legifrance results');
-    searchText = json.request;
-    searchStart = 0;
-    resultsNumber = 10;
-    searchUrl = 'https://www.google.fr/search?q=' + searchText + '&start=' + searchStart + '&num=' + resultsNumber.toString() + '&as_sitesearch=legifrance.gouv.fr';
-    console.log(searchUrl);
-    getHTML(searchUrl, function(response) {
-      parseGoogle(response, json, function(resultsjson) {
-        checkTrusted(resultsjson).then(
-          function(enrichedjson) {
-            //send next trusted results back to inject.js
-            let trusteds = enrichedjson.filter(filterTrusted);
-            console.log(trusteds);
-            console.log('found ' + trusteds.length + ' trusteds on ' + enrichedjson.length + ' total results');
-            browser.tabs.sendMessage(sender.tab.id, { json: enrichedjson, message: 'KB_LOI' });
-          },
-          function(Error) {
-            console.log(Error);
-          }
-        );
-      });
-    });
-    // static test - state results knowledge box
-    console.log('Looking for legifrance results');
-    searchText = json.request;
-    searchStart = 0;
-    resultsNumber = 10;
-    searchUrl = 'https://www.google.fr/search?q=' + searchText + '&start=' + searchStart + '&num=' + resultsNumber.toString() + '&as_sitesearch=gouv.fr';
-    console.log(searchUrl);
-    getHTML(searchUrl, function(response) {
-      console.log(response);
-      parseGoogle(response, json, function(resultsjson) {
-        checkTrusted(resultsjson).then(
-          function(enrichedjson) {
-            //send next trusted results back to inject.js
-            let trusteds = enrichedjson.filter(filterTrusted);
-            console.log(trusteds);
-            console.log('found ' + trusteds.length + ' trusteds on ' + enrichedjson.length + ' total results');
-            browser.tabs.sendMessage(sender.tab.id, { json: enrichedjson, message: 'KB_GOUV' });
-          },
-          function(Error) {
-            console.log(Error);
-          }
-        );
-      });
-    });
+    // // static test - deliberations knowledge box
+    // console.log('Looking for deliberations');
+    // searchText = searchText + '+délibération';
+    // searchStart = 0;
+    // resultsNumber = 10;
+    // searchUrl = 'https://www.google.fr/search?q=' + searchText + '&start=' + searchStart + '&num=' + resultsNumber.toString();
+    // console.log(searchUrl);
+    // getHTML(searchUrl, function(response) {
+    //   parseGoogle(response, json, function(resultsjson) {
+    //     checkTrusted(resultsjson).then(
+    //       function(enrichedjson) {
+    //         //send next trusted results back to inject.js
+    //         let trusteds = enrichedjson.filter(filterTrusted);
+    //         console.log(trusteds);
+    //         console.log('found ' + trusteds.length + ' trusteds on ' + enrichedjson.length + ' total results');
+    //         browser.tabs.sendMessage(sender.tab.id, { json: enrichedjson, message: 'KB_DELIB' });
+    //       },
+    //       function(Error) {
+    //         console.log(Error);
+    //       }
+    //     );
+    //   });
+    // });
+    // // static test - legifrance knowledge box
+    // console.log('Looking for legifrance results');
+    // searchText = json.request;
+    // searchStart = 0;
+    // resultsNumber = 10;
+    // searchUrl = 'https://www.google.fr/search?q=' + searchText + '&start=' + searchStart + '&num=' + resultsNumber.toString() + '&as_sitesearch=legifrance.gouv.fr';
+    // console.log(searchUrl);
+    // getHTML(searchUrl, function(response) {
+    //   parseGoogle(response, json, function(resultsjson) {
+    //     checkTrusted(resultsjson).then(
+    //       function(enrichedjson) {
+    //         //send next trusted results back to inject.js
+    //         let trusteds = enrichedjson.filter(filterTrusted);
+    //         console.log(trusteds);
+    //         console.log('found ' + trusteds.length + ' trusteds on ' + enrichedjson.length + ' total results');
+    //         browser.tabs.sendMessage(sender.tab.id, { json: enrichedjson, message: 'KB_LOI' });
+    //       },
+    //       function(Error) {
+    //         console.log(Error);
+    //       }
+    //     );
+    //   });
+    // });
+    // // static test - state results knowledge box
+    // console.log('Looking for legifrance results');
+    // searchText = json.request;
+    // searchStart = 0;
+    // resultsNumber = 10;
+    // searchUrl = 'https://www.google.fr/search?q=' + searchText + '&start=' + searchStart + '&num=' + resultsNumber.toString() + '&as_sitesearch=gouv.fr';
+    // console.log(searchUrl);
+    // getHTML(searchUrl, function(response) {
+    //   console.log(response);
+    //   parseGoogle(response, json, function(resultsjson) {
+    //     checkTrusted(resultsjson).then(
+    //       function(enrichedjson) {
+    //         //send next trusted results back to inject.js
+    //         let trusteds = enrichedjson.filter(filterTrusted);
+    //         console.log(trusteds);
+    //         console.log('found ' + trusteds.length + ' trusteds on ' + enrichedjson.length + ' total results');
+    //         browser.tabs.sendMessage(sender.tab.id, { json: enrichedjson, message: 'KB_GOUV' });
+    //       },
+    //       function(Error) {
+    //         console.log(Error);
+    //       }
+    //     );
+    //   });
+    // });
   }
 }
 

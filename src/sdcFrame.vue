@@ -1,204 +1,269 @@
 <template>
   <div id="app">
-    <button type="button" class="btn" @click="showModal">
+    <!-- <Nav class="mb-6" /> -->
+
+    <!--     <button type="button" class="sdc-btn" @click="showModal">
       Open Modal!
-    </button>
+    </button> -->
 
-    <modal v-show="isModalVisible" @close="closeModal" />
+    <!--     <modal v-show="isModalVisible" @close="closeModal" /> -->
+    <div class="sdc-container sdc-mx-auto">
+      <div class="sdc-mt-4 sdc-border sdc-border-gray-400 sdc-rounded">
+        <div class="sdc-p-2">
+          <img class="sdc-h-6" :src="this.asset('logos/sdc-gray-text.png')" alt="Logo Sources de Confiance" />
+        </div>
 
-    <ul>
-      <li v-for="result in results">
-        <a :href="result.url">{{ result.name }}</a
-        ><br />
-        <small>{{ result.snippet }}</small>
-      </li>
-    </ul>
+        <div class="sdc-px-2 sdc-pb-2 sdc-text-gray-500 sdc-text-s">{{ this.resultsCount }} résultats de confiance</div>
+
+        <Result v-for="result in results" :key="result.url" :result="result" class="sdc-p-2" />
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-import modal from './components/modal.vue';
+// Components
+import Result from './components/Result.vue';
+
+// Load SERP highlighting styles
+import styles from './assets/styles/google_highlight.css';
 
 export default {
   name: 'SdC',
+
   components: {
-    modal,
+    Result,
   },
 
-  methods: {
-    showModal() {
-      this.isModalVisible = true;
+  props: {
+    // Maximum search engine requests
+    maxRequests: {
+      type: Number,
+      default: 2,
     },
-    closeModal() {
-      this.isModalVisible = false;
+
+    // Results per Trusted pages
+    resultsPerPage: {
+      type: Number,
+      default: 10,
     },
   },
 
   data() {
     return {
-      isModalVisible: false,
-      results: [
-        // Sample for testing
-        {
-          id: 0,
-          url: 'https://www.univ-grenoble-alpes.fr/',
-          name: 'Université Grenoble Alpes',
-          snippet:
-            'Les cookies Google Analytics : Ce site utilise des cookies de Google Analytics, ces cookies nous aident à identifier le contenu qui vous intéresse le plus ainsi ...',
-          status: 'trusted',
-          ring: 'default',
-        },
-        {
-          id: 2,
-          url: 'http://www.museedegrenoble.fr/',
-          name: 'Musée de Grenoble',
-          snippet: "Créé en 1798, le musée de Grenoble n'a cessé de s'enrichir pour présenter aujourd'hui aux visiteurs plus de 900 œuvres. Un ensemble unique, tant par ses ...",
-          status: 'trusted',
-          ring: 'default',
-        },
-        {
-          id: 3,
-          url: 'https://www.bm-grenoble.fr/',
-          name: 'Bibliothèque municipale de Grenoble - Livres, Musique ...',
-          snippet: 'Bibliothèque municipale de Grenoble - livres, musique, cinéma, numérique pour tous. Informations pratiques et agenda des événements. Catalogue en ligne et ...',
-          status: 'trusted',
-          ring: 'default',
-        },
-        {
-          id: 6,
-          url: 'http://www.ac-grenoble.fr/',
-          name: 'Académie de Grenoble',
-          snippet:
-            'Gestion des cookies. Ce site utilise des cookies. Vous avez la possibilité de déterminer les cookies que vous autorisez ou refusez. Préférence pour tous les ...',
-          status: 'trusted',
-          ring: 'default',
-        },
-        {
-          id: 8,
-          url: 'https://www.chu-grenoble.fr/',
-          name: 'CHU Grenoble Alpes',
-          snippet: 'CHU de Grenoble - CHU des Alpes. Visites aux patients hospitalisés · Tous les événements rss. Rechercher un service. Sélectionner une catégorie, Urgences ...',
-          status: 'trusted',
-          ring: 'default',
-        },
-        {
-          id: 9,
-          url: 'http://www.isere.gouv.fr/',
-          name: "Accueil - Les services de l'État en Isère",
-          snippet: 'Essais de sirènes dans les communes de Pont-de-Chéruy et Grenoble le mercredi 8 juillet 2020. 06/07/2020. Communiqué du 6 juillet 2020 ...',
-          status: 'trusted',
-          ring: 'default',
-        },
-        {
-          id: 12,
-          url: 'https://www.grenoble-inp.fr/',
-          name: 'Grenoble INP',
-          snippet:
-            "6 écoles d'ingénieurs et des formations de docteurs orientés vers les grands défis de notre société : l'énergie, l'environnement, la société du numérique et la ...",
-          status: 'trusted',
-          ring: 'default',
-        },
-        {
-          id: 16,
-          url: 'http://www.sciencespo-grenoble.fr/',
-          name: 'Sciences Po Grenoble | Une grande école de sciences ...',
-          snippet: "Une grande école de sciences sociales au coeur d'une université de rang mondial. Toggle navigation. MENU. SCIENCES PO GRENOBLE · FORMATION ...",
-          status: 'trusted',
-          ring: 'default',
-        },
-        {
-          id: 17,
-          url: 'https://www.grenoble.cci.fr/',
-          name: 'CCI Grenoble - Entreprises et économie de la région ...',
-          snippet: "Le portail de la Chambre de commerce et d'industrie de Grenoble, Isère 38. Découvrez nos rubriques consacrées à la création de l'entreprise, au ...",
-          status: 'trusted',
-          ring: 'default',
-        },
-        {
-          id: 19,
-          url: 'https://www.ghm-grenoble.fr/',
-          name: 'Accueil GHM de Grenoble',
-          snippet:
-            "Le Groupe Hospitalier Mutualiste de Grenoble est un Établissement de Santé Privé d'Intérêt Collectif (ESPIC) à but non lucratif participant au service public ...",
-          status: 'trusted',
-          ring: 'default',
-        },
-        {
-          id: 20,
-          url: 'https://www.grenoble-patrimoine.fr/',
-          name: 'Grenoble Patrimoine: Accueil',
-          snippet: "Grenoble de 1925 à 1968. La ville laboratoire. L'explosion démographique exige désormais de penser un urbanisme planifié à plus grande échelle.",
-          status: 'trusted',
-          ring: 'default',
-        },
-        {
-          id: 25,
-          url: 'https://ml-grenoble.org/',
-          name: 'Mission Locale Grenoble',
-          snippet: 'La Mission Locale de Grenoble accueille, informe, oriente et accompagne tous les jeunes de 16 à 25 ans, notamment ceux sortis du système scolaire, en ...',
-          status: 'trusted',
-          ring: 'default',
-        },
-        {
-          id: 28,
-          url: 'https://musees.isere.fr/musee/musee-dauphinois',
-          name: 'Musée dauphinois',
-          snippet: null,
-          status: 'trusted',
-          ring: 'default',
-        },
-        {
-          id: 29,
-          url: 'http://grenoble.tribunal-administratif.fr/',
-          name: 'Tribunal administratif de Grenoble : Accueil',
-          snippet:
-            "Bienvenue sur le site du tribunal administratif de Grenoble. Le tribunal administratif est compétent pour juger la grande majorité des litiges résultant de l'activité ...",
-          status: 'trusted',
-          ring: 'default',
-        },
-        {
-          id: 30,
-          url: 'http://www.meteofrance.com/previsions-meteo-france/grenoble/38000',
-          name: 'METEO GRENOBLE par Météo-France - Prévisions Météo ...',
-          snippet: 'METEO FRANCE - Retrouvez les prévisions METEO GRENOBLE de Météo-France à 15 jours, les prévisions météos locales gratuites, complètes et détaillées à ...',
-          status: 'trusted',
-          ring: 'default',
-        },
-        {
-          id: 35,
-          url: 'http://www.onisep.fr/Pres-de-chez-vous/Auvergne-Rhone-Alpes/Grenoble',
-          name: 'ONISEP Grenoble - Grenoble - Onisep',
-          snippet:
-            "Éditeur public, l'Onisep produit et diffuse toute l'information sur les formations et les métiers. Il propose aussi des nouveaux services aux élèves, aux parents et ...",
-          status: 'trusted',
-          ring: 'default',
-        },
-        {
-          id: 46,
-          url: 'https://www.isere-tourisme.com/selection/destination-grenoble-agglo',
-          name: 'Destination Grenoble Agglo | Isère Tourisme',
-          snippet:
-            "Grenoble, c'est le coeur des Alpes, une ville sertie de montagnes. Ici, goûtez au plaisir de flâner sur les pas de Stendhal – le plus célèbre des Grenoblois - au ...",
-          status: 'trusted',
-          ring: 'default',
-        },
-        {
-          id: 49,
-          url: 'https://www.crous-grenoble.fr/',
-          name: 'Le Crous Grenoble Alpes - Au cœur de la vie étudiante !',
-          snippet: 'Le Crous Grenoble Alpes améliore les conditions de vie étudiantes : bourses, logement, restauration, culture, aides sociales et jobs étudiants !',
-          status: 'trusted',
-          ring: 'default',
-        },
-      ],
+      // --- TODO: need to load data frol storage. Better located in created function
+      storedSettings: {
+        extensionSwitch: true,
+        apiserver: 'https://sourcesdeconfiance.org/api/trusted',
+      },
+
+      queryString: null,
+      results: [],
+
+      seCountRequests: 0,
+      seStartResult: 0,
+      seResultsPerPage: 10,
+      seCurrentPage: 1,
+
+      interval: null,
     };
+  },
+
+  mounted: function() {
+    // `this` points to the vm instance
+
+    console.log('mounted:');
+    var browser = require('webextension-polyfill');
+
+    // Handler for all messages coming from background.js (and the others)
+    browser.runtime.onMessage.addListener(this.handleMessage);
+
+    this.queryString = document.getElementsByName('q')[0].value;
+
+    // First results
+    // Extract the first results from the SERP we have been activated for
+    var resultjson = this.extractFirstResults();
+
+    // Calculate results per page
+    if (window.location.href.indexOf('?start=') != -1 || window.location.href.indexOf('&start=') != -1) {
+      var url = new URL(window.location.href);
+      this.startResult = parseInt(url.searchParams.get('start'));
+      this.currentPage = 1 + this.seStartResult / this.sdResultsPerPage;
+    }
+    var resultsLength = document.querySelectorAll('.g .rc').length;
+    if (this.seCurrentPage == 1 && resultsLength > 10) {
+      //quickfix for first SERP results number variable due to knowledge boxes
+      this.seResultsPerPage = Math.round(resultsLength / 10) * 10;
+    }
+
+    // Now, get trusted results
+    var requestjson = {
+      request: this.queryString,
+      results: resultjson,
+      userAgent: window.navigator.userAgent,
+      apiserver: this.storedSettings.apiserver,
+      searchengine: 'google',
+      resultsPerPage: this.seResultsPerPage,
+      currentPage: this.seCurrentPage,
+      nextResultIndex: this.seNextResultIndex,
+      type: 'GET_SERP',
+    };
+
+    // And notify background page, which will callback handleMessage
+    browser.runtime.sendMessage(requestjson);
+
+    // Now work on page 2 and others if needed
+    this.collectRemainingResults();
+  },
+
+  computed: {
+    resultsCount: function() {
+      return this.results.length;
+    },
+
+    seNextResultIndex: function() {
+      return this.resultsPerPage + this.startResult;
+    },
+  },
+
+  methods: {
+    extractFirstResults: function() {
+      const resultslist = document.getElementsByClassName('g');
+      var resultjson = [];
+      for (var i = 0; i < resultslist.length; i++) {
+        var el = resultslist[i].getElementsByClassName('rc'); // test if result has expected child. prevents code from breaking when a special info box occurs.
+        if (el.length > 0 && !resultslist[i].classList.contains('kno-kp')) {
+          //quickfix do not analyse knowledge boxes. Could be a specific analysis instead
+          var url = resultslist[i].querySelector('.rc a').href;
+          var name = resultslist[i].querySelector('.rc .r a h3').textContent;
+          var snippet = resultslist[i].querySelector('.rc .s .st') ? resultslist[i].querySelector('.rc .s .st').textContent : '';
+          resultjson.push({
+            id: i,
+            url: url,
+            name: name,
+            snippet: snippet,
+          });
+        }
+      }
+      return resultjson;
+    },
+
+    collectRemainingResults: function() {
+      this.interval = setInterval(
+        function() {
+          console.log(`countRequests: ${this.seCountRequests}`);
+
+          console.log('startResult ' + this.seStartResult);
+          console.log('resultsPerPage : ' + this.seResultsPerPage);
+          console.log('currentPage : ' + this.seCurrentPage);
+          console.log('Next result index : ' + this.seNextResultIndex);
+
+          var testjson = {
+            request: this.queryString,
+            userAgent: window.navigator.userAgent,
+            apiserver: this.storedSettings.apiserver,
+            searchengine: 'google',
+            resultsPerPage: this.seResultsPerPage,
+            currentPage: this.seCurrentPage,
+            nextResultIndex: this.seNextResultIndex,
+            type: 'GET_NEXT_RESULTS',
+          };
+          browser.runtime.sendMessage(testjson);
+
+          this.seCountRequests++;
+          if (this.seCountRequests >= this.maxRequests) clearInterval(this.interval);
+        }.bind(this),
+        500
+      );
+    },
+
+    filterTrusted: function(el) {
+      return el.status == 'trusted';
+    },
+
+    handleMessage: function(request, sender, sendResponse) {
+      console.log('handleMessage: request.message=' + request.message);
+
+      switch (request.message) {
+        case 'HIGHLIGHT':
+          this.results = request.json;
+          this.seCountRequests = 1;
+          this.highlight(request.json);
+          break;
+
+        case 'NEXT_RESULTS':
+          console.log('Next results :');
+          console.log(request.json);
+          console.log('Next trusted results :');
+          console.log(request.json.filter(this.filterTrusted));
+          this.results = this.results.concat(request.json.filter(this.filterTrusted));
+          break;
+
+        case 'KB_DELIB':
+          console.log('Deliberations :');
+          console.log(request.json.filter(this.filterTrusted));
+          break;
+
+        case 'KB_LOI':
+          console.log('Lois :');
+          console.log(request.json.filter(this.filterTrusted));
+          break;
+
+        case 'KB_GOUV':
+          console.log('Gouv :');
+          console.log(request.json.filter(this.filterTrusted));
+          break;
+      }
+    },
+
+    highlight: function(enrichedjson) {
+      const resultslist = document.getElementsByClassName('g');
+      //check if it is the first result page, to apply specific style to the first result entry
+      if (window.location.href.indexOf('&start=0') != -1) {
+        firstresult = true;
+      } else if (window.location.href.indexOf('?start=') != -1) {
+        firstresult = false;
+      } else if (window.location.href.indexOf('&start=') != -1) {
+        firstresult = false;
+      } else {
+        var firstresult = true;
+      }
+
+      for (var i = 0; i < enrichedjson.length; i++) {
+        if (enrichedjson[i].status == 'trusted') {
+          resultslist[enrichedjson[i].id].classList.add('trusted');
+
+          if (firstresult) {
+            resultslist[enrichedjson[i].id].classList.add('trustedfirst');
+            resultslist[enrichedjson[i].id].classList.add('tooltip');
+            var para = document.createElement('span');
+            para.classList.add('tooltiptext');
+            para.appendChild(document.createTextNode('Source de confiance '));
+            let newNode = resultslist[enrichedjson[i].id];
+            newNode.appendChild(para);
+            var parentDiv = document.getElementById('rso');
+            var firstChildNode = document.getElementById('rso').firstElementChild;
+            parentDiv.insertBefore(newNode, firstChildNode);
+            firstresult = false;
+            if (resultslist[enrichedjson[i].id].classList.contains('g-blk')) {
+              //styling - only if the first trusted result is a special box mnr-c g-blk - could be improved
+              resultslist[enrichedjson[i].id].classList.remove('trustedfirst');
+              resultslist[enrichedjson[i].id].classList.add('trusted');
+            }
+          }
+        }
+      }
+    },
+
+    asset: function(name) {
+      return browser.runtime.getURL(`/assets/${name}`);
+    },
   },
 };
 </script>
 
 <style>
-/*@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
-*/
 </style>
