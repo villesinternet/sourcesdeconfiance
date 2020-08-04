@@ -1,5 +1,5 @@
 <template>
-  <div id="agregate" @click="toggle()" class="hdtb-mitem hdtb-imb" :class="{ 'hdtb-msel': isActive }" aria-hidden="true">
+  <div @click="click" class="hdtb-mitem hdtb-imb" :class="{ 'hdtb-msel': isActive }" aria-hidden="true">
     <span v-if="isActive">
       <a class="q qs" href="#" data-sc="A">
         <span class="HF9Klc iJddsb" style="height:16px;width:16px">
@@ -10,7 +10,7 @@
             <path d="M22 20.59l-5.69-5.69A7.96 7.96 0 0 0 18 10h-2a6 6 0 0 1-6 6v2c1.85 0 3.52-.64 4.88-1.68l5.69 5.69L22 20.59" fill="#4285F4"></path>
           </svg>
         </span>
-        SdC<span>({{ trustedCount }})</span>
+        NewSdc (<slot />)
       </a>
     </span>
 
@@ -20,38 +20,38 @@
           <path d="M16.32 14.88a8.04 8.04 0 1 0-1.44 1.44l5.76 5.76 1.44-1.44-5.76-5.76zm-6.36 1.08c-3.36 0-6-2.64-6-6s2.64-6 6-6 6 2.64 6 6-2.64 6-6 6"></path>
         </svg>
       </span>
-      SdC<span>({{ trustedCount }})</span>
+      NewSdc (<slot />)
     </span>
   </div>
 </template>
 
 <script>
 export default {
-  props: ['frameVue'],
-
-  created: function() {
-    // `this` points to the vm instance
-    //console.log('created, agregates=' + this.agregates)
-  },
-
-  mounted: function() {
-    // `this` points to the vm instance
-    this.showFrame();
-
-    this.$root.$on('newTrustedResults', count => {
-      console.log(`newTrustedResults ${count}`);
-      this.trustedCount = count;
-    });
-  },
+  name: 'Tab',
 
   data() {
     return {
-      trustedCount: 0,
       isActive: false,
     };
   },
 
+  mounted: function() {
+    console.log('>Tab:mounted');
+  },
+
+  updated: function() {
+    //console.log('>Tab:updated');
+    this.$nextTick(function() {
+      //console.log('>Tab:updated>nextTick');
+    });
+  },
+
   methods: {
+    click: function() {
+      console.log('>click');
+      this.$parent.$emit('tabClick');
+    },
+
     showFrame: function() {
       // Manage Google page elements
       document.getElementById('appbar').style.display = this.isActive ? 'none' : '';
@@ -64,7 +64,8 @@ export default {
       }
 
       // Manage our own Frame
-      if (this.frameVue.$el) this.frameVue.$el.style.display = this.isActive ? 'block' : 'none';
+      // if (this.$parent)
+      //   this.$parent.$el.style.display = this.isActive ? 'block' : 'none';
     },
 
     toggle: function() {

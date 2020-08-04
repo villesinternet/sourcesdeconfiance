@@ -74,7 +74,9 @@ getStoredSettings.then(checkStoredSettings, onError);
 // Get message from inject.js and send back the enrichedjson response
 //------------------------------
 function handleMessage(json, sender, sendResponse) {
+  console.log('>handleMessage:');
   if (json.type == 'GET_SERP') {
+    console.log('GET_SERP');
     checkTrusted(json).then(
       function(enrichedjson) {
         browser.tabs.sendMessage(sender.tab.id, { json: enrichedjson, message: 'HIGHLIGHT' });
@@ -85,14 +87,11 @@ function handleMessage(json, sender, sendResponse) {
     );
   }
   if (json.type == 'GET_NEXT_RESULTS') {
-    console.log('Searching next results');
-    console.log(json.request);
-    console.log('Next result index : ' + json.nextResultIndex);
-    console.log('Expected results number : ' + json.resultsPerPage);
-    var searchText = json.request;
-    var searchStart = json.nextResultIndex;
-    var resultsNumber = 50;
-    var searchUrl = 'https://www.google.fr/search?q=' + searchText + '&start=' + searchStart + '&num=' + resultsNumber.toString();
+    console.log('GET_NEXT_RESULTS');
+    // var searchText = json.request;
+    // var searchStart = json.start;
+    // var resultsNumber = json.resultsPerPage;
+    var searchUrl = 'https://www.google.fr/search?q=' + json.request + '&start=' + json.start + '&num=' + json.resultsPerPage.toString();
     console.log(searchUrl);
     getHTML(searchUrl, function(response) {
       parseGoogle(response, json, function(resultsjson) {
@@ -187,6 +186,7 @@ function getActiveTab() {
 var getHTML = function(url, callback) {
   // Feature detection
   if (!window.XMLHttpRequest) return;
+  console.log('>getHTML');
   // Create new request
   var xhr = new XMLHttpRequest();
   // Setup callback
@@ -194,6 +194,10 @@ var getHTML = function(url, callback) {
     if (callback && typeof callback === 'function') {
       callback(this.responseXML);
     }
+  };
+  xhr.onerror = () => {
+    console.log('Error: (' + xhr.status + ') ' + xhr.statusText);
+    //reject(xhr.statusText);
   };
   // Get the HTML
   xhr.open('GET', url);
@@ -223,6 +227,7 @@ function parseGoogle(doc, json, callback) {
 }
 
 function checkTrusted(json) {
+  console.log('>checkTrusted:');
   var start_time = new Date().getTime();
   return new Promise((resolve, reject) => {
     var url = 'https://sourcesdeconfiance.org/api/trusted';
@@ -235,12 +240,13 @@ function checkTrusted(json) {
     let xhr = new XMLHttpRequest();
     xhr.open('POST', url, true);
     xhr.setRequestHeader('Content-Type', 'data/json');
+
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) {
         //LOGS FOR DEBUGGING
         var request_time = new Date().getTime() - start_time;
         console.log('resolved in ' + request_time + 'ms');
-        console.log(xhr.response);
+        //console.log(xhr.response);
         var enrichedjson = JSON.parse(xhr.response).data.results;
         resolve(enrichedjson);
       } else {
@@ -249,8 +255,10 @@ function checkTrusted(json) {
         reject(xhr.statusText);
       }
     };
-    console.log(JSON.stringify(json));
+
+    // console.log(JSON.stringify(json));
     xhr.onerror = () => reject(xhr.statusText);
+
     xhr.send(JSON.stringify(json));
   });
 }

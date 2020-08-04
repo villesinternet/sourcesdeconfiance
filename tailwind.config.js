@@ -2,4 +2,7 @@
 module.exports = {
   prefix: 'sdc-',
   important: true,
+  // corePlugins: {
+  // 	preflight: false,
+  // }
 };
