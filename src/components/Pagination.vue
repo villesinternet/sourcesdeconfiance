@@ -137,7 +137,7 @@ export default {
 
       this.focusPageSelector();
 
-      this.$emit('input', this.currentPage);
+      this.$emit('pageselect', this.currentPage);
     },
 
     focusPageSelector: function() {

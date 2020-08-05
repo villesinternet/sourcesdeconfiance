@@ -10,7 +10,7 @@
 
         <Result v-for="result in currentResults" :key="result.url" :result="result" class="sdc-p-2" />
 
-        <Pagination v-model="currentPage" :countItems="results.length" :itemsPerPage="10" />
+        <Pagination v-model="currentPage" :countItems="results.length" :itemsPerPage="10" @pageselect="pageSelect" />
       </div>
     </div>
   </div>
@@ -39,7 +39,7 @@ export default {
     // Maximum search engine requests
     maxRequests: {
       type: Number,
-      default: 4,
+      default: 10,
     },
 
     // Trusted results per page
@@ -51,11 +51,11 @@ export default {
     // Delay between 2 requests
     requestDelay: {
       type: Number,
-      default: 2000,
+      default: 1000,
     },
 
     // Nb of results per search engine request
-    requestSize: {
+    resultsPerSERequest: {
       type: Number,
       default: 50,
     },
@@ -89,6 +89,8 @@ export default {
       interval: null,
 
       currentPage: 1, // current Trusted results page
+
+      pendingRequest: false, // there is an ongoing SE request
     };
   },
 
@@ -105,7 +107,6 @@ export default {
     this.tab.$slots.default = this.resultsCount;
     this.tab.$mount();
     this.$on('tabClick', function() {
-      console.log('received click');
       this.toggle();
     });
     // Insert in google's menu bar
@@ -119,11 +120,8 @@ export default {
     var browser = require('webextension-polyfill');
     browser.runtime.onMessage.addListener(this.handleMessage);
 
-    // Get the first trusted results
-    this.firstResults();
-
-    // Now work on page 2 and others if needed
-    this.remainingResults();
+    // Get the trusted results
+    this.getResults();
   },
 
   computed: {
@@ -161,8 +159,26 @@ export default {
       return results;
     },
 
+    sendRequest: function(message) {
+      console.log('>sendRequest message.type=' + message.type);
+
+      this.se.currentPage++;
+      this.se.requestsCount++;
+      this.se.start += this.se.resultsPerPage;
+
+      // Skip this page since it was the initial SERP
+      if ((message.type == 'GET_NEXT_RESULTS' || message.type == 'FETCH_AND_CATEGORIZE') && this.se.currentPage == this.se.initialPage) {
+        console.log('this.se.currentPage == this.se.initialPage. Returning.');
+        return;
+      }
+
+      // Send request
+      this.pendingRequest = true;
+      browser.runtime.sendMessage(message);
+    },
+
     firstResults: function() {
-      console.log('>sdcFrame:firstResults');
+      console.log('>firstResults');
 
       // Calculate initial SERP results per page
       if (window.location.href.indexOf('?start=') != -1 || window.location.href.indexOf('&start=') != -1) {
@@ -176,109 +192,151 @@ export default {
         this.se.resultsPerPage = Math.round(resultsLength / 10) * 10;
       }
 
-      // And notify background page, which will callback handleMessage
-      this.sendRequest({
+      // -- Process the SERP
+      // Extract all results
+      var results = this.extractFromSERP();
+
+      // Send results to API to categorize the results
+      var request = {
         request: this.queryString,
-        results: this.extractFromSERP(),
+        results: results,
         userAgent: window.navigator.userAgent,
         apiserver: this.storedSettings.apiserver,
         searchengine: 'google',
-        type: 'GET_SERP',
-      });
+        type: 'CATEGORIZE',
+      };
+      this.sendRequest(request);
     },
 
-    remainingResults: function() {
-      console.log('>sdcFrame:remainingResults');
+    nextResults: function() {
+      console.log('>nextResults');
 
-      this.se.resultsPerPage = this.requestSize;
+      // Fetch the results and categorize them
+      var request = {
+        request: this.queryString,
+        userAgent: window.navigator.userAgent,
+        apiserver: this.storedSettings.apiserver,
+        searchengine: 'google',
+        resultsPerPage: this.resultsPerSERequest,
+        currentPage: this.se.currentPage,
+        start: this.se.start,
+        type: 'FETCH_AND_CATEGORIZE',
+      };
+      this.sendRequest(request);
 
+      return true;
+    },
+
+    getResults: function() {
+      console.log('>getResults');
+
+      // We're entering an interval loop to send SE requests at an acceptable pace
       this.interval = setInterval(
         function() {
-          console.log('>sdcFrame:interval');
-          console.log('requests executed: ' + this.se.requestsCount);
-          console.log('executing page: ' + this.se.currentPage);
+          console.log('>interval');
 
-          // Reached max nb of requests
+          // We have reached the maximum number of SE requests for now
           if (this.se.requestsCount >= this.maxRequests) {
-            clearInterval(this.interval);
+            console.log('Max request count reach (' + this.maxRequests + ')');
+            console.log('clearing interval = ' + this.interval);
+            clearInterval(this.interval); // No more interval
             return;
           }
 
-          this.sendRequest({
-            request: this.queryString,
-            userAgent: window.navigator.userAgent,
-            apiserver: this.storedSettings.apiserver,
-            searchengine: 'google',
-            resultsPerPage: this.se.resultsPerPage,
-            currentPage: this.se.currentPage,
-            start: this.se.start,
-            type: 'GET_NEXT_RESULTS',
-          });
+          // Is there a pending request? Let's wait for it to complete
+          if (this.pendingRequest) {
+            console.log('request pending');
+            return;
+          }
+
+          // -- First case
+          // We just have been setup
+          // We will use the SERP to extract the first trusted results
+          if (this.results.length == 0) {
+            this.firstResults();
+            // Let the interval loop continue so that we have more results if needed
+            return;
+          }
+
+          // -- Second case
+          // We already have some results, but not enough to fill
+          // the current page
+          if (this.currentResults.length < this.resultsPerPage) {
+            this.nextResults();
+            return;
+          }
+
+          // We do not need to fethc more results at this stage
+          console.log('clearing interval = ' + this.interval);
+          clearInterval(this.interval); // No more interval
         }.bind(this),
         this.requestDelay
       );
-    },
 
-    filterTrusted: function(el) {
-      return el.status == 'trusted';
-    },
-
-    sendRequest: function(message) {
-      console.log('>sdcFrame:sendRequest');
-
-      // console.log(`sendMessage: ${JSON.stringify(message)}`);
-
-      // console.log('type: ' + message.type);
-      // console.log('request: ' + message.request);
-      // console.log(`requestsCount: ${this.se.requestsCount}`);
-      // console.log('start ' + this.se.start);
-      // console.log('resultsPerPage : ' + this.se.resultsPerPage);
-      // console.log('currentPage : ' + this.se.currentPage);
-      // // console.log('initialPage : ' + this.se.initialPage);
-      // console.log('maxRequests : ' + this.maxRequests);
-
-      this.se.currentPage++;
-      this.se.requestsCount++;
-      this.se.start += this.se.resultsPerPage;
-
-      // Skip this page since it was the initial SERP
-      if (message.type == 'GET_NEXT_RESULTS' && this.se.currentPage == this.se.initialPage) return;
-
-      // Send request
-      browser.runtime.sendMessage(message);
+      console.log('interval set to = ' + this.interval + ' for ' + this.requestDelay + ' ms.');
     },
 
     handleMessage: function(request, sender, sendResponse) {
-      console.log('>sdCFrame:handleMessage:');
+      console.log('>handleMessage request.message=' + request.message);
+
+      // Make sure the messages we process are ours
+      if (sender.id != chrome.runtime.id) {
+        console.log('Message not from us. request=' + JSON.stringify(request) + ' sender=' + JSON.stringify(sender));
+        return;
+      }
+
+      // We're no longer are waiting for a request answer
+      console.log('this.pendingRequest was ' + this.pendingRequest + '. Setting to false.');
+      this.pendingRequest = false;
 
       switch (request.message) {
         case 'HIGHLIGHT':
-          console.log('HIGHLIGHT');
+          // We have the first trusted results extracted from the SERP
+
+          // Collect the first results
           this.results = request.json.filter(this.filterTrusted);
+          console.log('this.results.length=' + this.results.length);
+
+          // Refresh tab count
           this.tab.$slots.default = this.results.length;
           this.tab.$forceUpdate();
+
+          // Mark the trusted results in the SERP
           this.highlight(request.json);
 
-          // Signal we have new results
-          //this.$root.$emit('newTrustedResults', this.resultsCount);
+          // And set the number of results per request we want to use from now on
+          this.se.resultsPerPage = this.resultsPerSERequest;
 
           break;
 
         case 'NEXT_RESULTS':
-          console.log('NEXT_RESULTS');
           // Keep only filtered results
-          // this.results = this.results.concat(request.json.filter(this.filterTrusted));
           var trusted = request.json.filter(this.filterTrusted);
-          // Make sure we do not have duplicates
-          for (var i = 0; i < trusted.length; i++) {
-            for (var j = 0; j < this.results.length; j++) if (trusted[i].url == this.results[j].url) break;
-            // If the above loop has not finished early, the new result can be appended to this.results
-            if (j == this.results.length) this.results.push(trusted[i]);
-          }
+          console.log('trusted.length=' + trusted.length + ', this.results.length=' + this.results.length);
 
-          // Signal we have new results
+          // Make sure we do not have duplicates
+          // for each of the new results
+          for (var i = 0; i < trusted.length; i++) {
+            // Make sure it is not in the reuslts we already have
+            for (var j = 0; j < this.results.length; j++)
+              if (trusted[i].url == this.results[j].url) {
+                console.log('duplicate found: url=' + this.results[j].url);
+                break;
+              }
+
+            // If the above loop hhas completed, the new result does not already exist and can be appended to this.results
+            if (j == this.results.length) {
+              // console.log("push " + trusted[i].url);
+              this.results.push(trusted[i]);
+            }
+          }
+          console.log('this.results.length=' + this.results.length);
+
+          // Signal we have new results. Update the view
           this.tab.$slots.default = this.results.length;
           this.tab.$forceUpdate();
+
+          // Request is not pending anymore
           break;
 
         case 'KB_DELIB':
@@ -296,6 +354,12 @@ export default {
           console.log(request.json.filter(this.filterTrusted));
           break;
       }
+
+      console.log('<handleMessage');
+    },
+
+    filterTrusted: function(el) {
+      return el.status == 'trusted';
     },
 
     highlight: function(enrichedjson) {
@@ -336,6 +400,14 @@ export default {
           }
         }
       }
+    },
+
+    // A pagination button has been pressed: see if we need to add results
+    pageSelect: function(page) {
+      this.currentPage = page;
+      console.log('>pageSelect: page = ' + page);
+      console.log('this.currentPage=' + this.currentPage);
+      this.getResults();
     },
 
     asset: function(name) {

@@ -48,7 +48,6 @@ export default {
 
   methods: {
     click: function() {
-      console.log('>click');
       this.$parent.$emit('tabClick');
     },
 

@@ -74,9 +74,16 @@ getStoredSettings.then(checkStoredSettings, onError);
 // Get message from inject.js and send back the enrichedjson response
 //------------------------------
 function handleMessage(json, sender, sendResponse) {
-  console.log('>handleMessage:');
-  if (json.type == 'GET_SERP') {
-    console.log('GET_SERP');
+  console.log('>handleMessage: json.type=' + json.type);
+
+  // switch (json.type) {
+  //   case 'GET_SERP':
+  //     break;
+  //   case 'GET_NEXT_RESULTS':
+  //     break;
+  // }
+
+  if (json.type == 'GET_SERP' || json.type == 'CATEGORIZE') {
     checkTrusted(json).then(
       function(enrichedjson) {
         browser.tabs.sendMessage(sender.tab.id, { json: enrichedjson, message: 'HIGHLIGHT' });
@@ -86,8 +93,8 @@ function handleMessage(json, sender, sendResponse) {
       }
     );
   }
-  if (json.type == 'GET_NEXT_RESULTS') {
-    console.log('GET_NEXT_RESULTS');
+
+  if (json.type == 'GET_NEXT_RESULTS' || json.type == 'FETCH_AND_CATEGORIZE') {
     // var searchText = json.request;
     // var searchStart = json.start;
     // var resultsNumber = json.resultsPerPage;
