@@ -11,9 +11,10 @@ const config = {
   context: __dirname + '/src',
   entry: {
     background: './background.js',
+    //google: './google.js',
     google: './google.js',
-    qwant: './qwant.js',
-    bing: './bing.js',
+    qwant: './content/qwant.js',
+    bing: './content/bing.js',
     'popup/popup': './popup/popup.js',
     'options/options': './options/options.js',
   },

@@ -1,4 +1,9 @@
-var browser = require('webextension-polyfill');
+import * as FakeResults from './background/fakeResults.js';
+// import * as Google from './background/google.js'
+
+const extensionversion = '1.1';
+
+const useFakeResults = true; // Set to true to generate our own results rather than asking the SE
 
 // DEFAULT SETTINGS
 // If there is nothing in storage, use these values.
@@ -8,11 +13,18 @@ var defaultsettings = {
   apiserver: 'https://sourcesdeconfiance.org/api/trusted',
 };
 
-const extensionversion = '1.0.42';
+console.log('Sources de confiance v' + extensionversion);
 
+var browser = require('webextension-polyfill');
+
+browser.storage.local.get().then(checkStoredSettings, function(e) {
+  console.error(`Error fetching config: ${e}`);
+});
 browser.runtime.onMessage.addListener(handleMessage);
 
 function checkAPI() {
+  console.log('>checkAPI');
+
   var start_time = new Date().getTime();
   var dailyhello = { version: extensionversion, userAgent: window.navigator.userAgent };
   var url = 'https://sourcesdeconfiance.org/api/version';
@@ -23,8 +35,8 @@ function checkAPI() {
     if (xhr.status >= 200 && xhr.status < 300) {
       //LOGS FOR DEBUGGING
       var request_time = new Date().getTime() - start_time;
-      console.log('Sources de confiance v' + extensionversion + ' - API check resolved in ' + request_time + 'ms');
-      console.log(xhr.response);
+      console.log('API version ' + JSON.parse(xhr.response).version + ' (resolved in ' + request_time + 'ms)');
+      //console.log(JSON.parse(xhr.response));
     } else {
       console.log(xhr.statusText);
     }
@@ -34,6 +46,8 @@ function checkAPI() {
 }
 
 function checkStoredSettings(storedsettings) {
+  console.log('>checkStoredSettings');
+
   // COULD BE FACTORIZED
   var today = new Date();
   if (!storedsettings.extensionswitch) {
@@ -57,18 +71,10 @@ function checkStoredSettings(storedsettings) {
         browser.storage.local.set(storedsettings);
       } else {
         console.log(storedsettings);
-        console.log('Sources de confiance v' + extensionversion + ' - everything up to date');
       }
     }
   }
 }
-
-function onError(e) {
-  console.error(`Error: ${e}`);
-}
-
-const getStoredSettings = browser.storage.local.get();
-getStoredSettings.then(checkStoredSettings, onError);
 
 // FILTER MODULE
 // Get message from inject.js and send back the enrichedjson response
@@ -76,114 +82,132 @@ getStoredSettings.then(checkStoredSettings, onError);
 function handleMessage(json, sender, sendResponse) {
   console.log('>handleMessage: json.type=' + json.type);
 
-  // switch (json.type) {
-  //   case 'GET_SERP':
-  //     break;
-  //   case 'GET_NEXT_RESULTS':
-  //     break;
-  // }
+  switch (json.type) {
+    case 'GET_SERP':
+    case 'CATEGORIZE':
+      checkTrusted(json).then(
+        function(enrichedjson) {
+          browser.tabs.sendMessage(sender.tab.id, { json: enrichedjson, message: 'HIGHLIGHT' });
+        },
+        function(Error) {
+          console.log(Error);
+        }
+      );
+      break;
 
-  if (json.type == 'GET_SERP' || json.type == 'CATEGORIZE') {
-    checkTrusted(json).then(
-      function(enrichedjson) {
-        browser.tabs.sendMessage(sender.tab.id, { json: enrichedjson, message: 'HIGHLIGHT' });
-      },
-      function(Error) {
-        console.log(Error);
+    case 'GET_NEXT_RESULTS':
+    case 'FETCH_AND_CATEGORIZE':
+      if (useFakeResults) {
+        console.log('useFakeResults');
+
+        var results = new FakeResults.get(Math.floor(Math.random() * 10));
+        console.log(results);
+        browser.tabs.sendMessage(sender.tab.id, {
+          json: results.results,
+          message: 'NEXT_RESULTS',
+        });
+        return;
       }
-    );
+
+      // Use the prodived search link if it is given
+      if (json.searchLink) var searchUrl = json.searchLink;
+      else var searchUrl = 'https://www.google.fr/search?q=' + json.request + '&start=' + json.start + '&num=' + json.resultsPerPage.toString();
+      console.log(searchUrl);
+
+      getHTML(searchUrl, function(response) {
+        parseGoogle(response, json, function(resultsjson) {
+          checkTrusted(resultsjson).then(
+            function(enrichedjson) {
+              //send next trusted results back to the content script
+              browser.tabs.sendMessage(sender.tab.id, {
+                json: enrichedjson,
+                message: 'NEXT_RESULTS',
+              });
+            },
+
+            function(Error) {
+              console.log(Error);
+            }
+          );
+        });
+      });
+      break;
+
+    default:
+      console.log('unhandled message');
+      break;
   }
 
-  if (json.type == 'GET_NEXT_RESULTS' || json.type == 'FETCH_AND_CATEGORIZE') {
-    // var searchText = json.request;
-    // var searchStart = json.start;
-    // var resultsNumber = json.resultsPerPage;
-    var searchUrl = 'https://www.google.fr/search?q=' + json.request + '&start=' + json.start + '&num=' + json.resultsPerPage.toString();
-    console.log(searchUrl);
-    getHTML(searchUrl, function(response) {
-      parseGoogle(response, json, function(resultsjson) {
-        checkTrusted(resultsjson).then(
-          function(enrichedjson) {
-            //send next trusted results back to inject.js
-            browser.tabs.sendMessage(sender.tab.id, { json: enrichedjson, message: 'NEXT_RESULTS' });
-          },
-          function(Error) {
-            console.log(Error);
-          }
-        );
-      });
-    });
-    // // static test - deliberations knowledge box
-    // console.log('Looking for deliberations');
-    // searchText = searchText + '+délibération';
-    // searchStart = 0;
-    // resultsNumber = 10;
-    // searchUrl = 'https://www.google.fr/search?q=' + searchText + '&start=' + searchStart + '&num=' + resultsNumber.toString();
-    // console.log(searchUrl);
-    // getHTML(searchUrl, function(response) {
-    //   parseGoogle(response, json, function(resultsjson) {
-    //     checkTrusted(resultsjson).then(
-    //       function(enrichedjson) {
-    //         //send next trusted results back to inject.js
-    //         let trusteds = enrichedjson.filter(filterTrusted);
-    //         console.log(trusteds);
-    //         console.log('found ' + trusteds.length + ' trusteds on ' + enrichedjson.length + ' total results');
-    //         browser.tabs.sendMessage(sender.tab.id, { json: enrichedjson, message: 'KB_DELIB' });
-    //       },
-    //       function(Error) {
-    //         console.log(Error);
-    //       }
-    //     );
-    //   });
-    // });
-    // // static test - legifrance knowledge box
-    // console.log('Looking for legifrance results');
-    // searchText = json.request;
-    // searchStart = 0;
-    // resultsNumber = 10;
-    // searchUrl = 'https://www.google.fr/search?q=' + searchText + '&start=' + searchStart + '&num=' + resultsNumber.toString() + '&as_sitesearch=legifrance.gouv.fr';
-    // console.log(searchUrl);
-    // getHTML(searchUrl, function(response) {
-    //   parseGoogle(response, json, function(resultsjson) {
-    //     checkTrusted(resultsjson).then(
-    //       function(enrichedjson) {
-    //         //send next trusted results back to inject.js
-    //         let trusteds = enrichedjson.filter(filterTrusted);
-    //         console.log(trusteds);
-    //         console.log('found ' + trusteds.length + ' trusteds on ' + enrichedjson.length + ' total results');
-    //         browser.tabs.sendMessage(sender.tab.id, { json: enrichedjson, message: 'KB_LOI' });
-    //       },
-    //       function(Error) {
-    //         console.log(Error);
-    //       }
-    //     );
-    //   });
-    // });
-    // // static test - state results knowledge box
-    // console.log('Looking for legifrance results');
-    // searchText = json.request;
-    // searchStart = 0;
-    // resultsNumber = 10;
-    // searchUrl = 'https://www.google.fr/search?q=' + searchText + '&start=' + searchStart + '&num=' + resultsNumber.toString() + '&as_sitesearch=gouv.fr';
-    // console.log(searchUrl);
-    // getHTML(searchUrl, function(response) {
-    //   console.log(response);
-    //   parseGoogle(response, json, function(resultsjson) {
-    //     checkTrusted(resultsjson).then(
-    //       function(enrichedjson) {
-    //         //send next trusted results back to inject.js
-    //         let trusteds = enrichedjson.filter(filterTrusted);
-    //         console.log(trusteds);
-    //         console.log('found ' + trusteds.length + ' trusteds on ' + enrichedjson.length + ' total results');
-    //         browser.tabs.sendMessage(sender.tab.id, { json: enrichedjson, message: 'KB_GOUV' });
-    //       },
-    //       function(Error) {
-    //         console.log(Error);
-    //       }
-    //     );
-    //   });
-    // });
-  }
+  // // static test - deliberations knowledge box
+  // console.log('Looking for deliberations');
+  // searchText = searchText + '+délibération';
+  // searchStart = 0;
+  // resultsNumber = 10;
+  // searchUrl = 'https://www.google.fr/search?q=' + searchText + '&start=' + searchStart + '&num=' + resultsNumber.toString();
+  // console.log(searchUrl);
+  // getHTML(searchUrl, function(response) {
+  //   parseGoogle(response, json, function(resultsjson) {
+  //     checkTrusted(resultsjson).then(
+  //       function(enrichedjson) {
+  //         //send next trusted results back to inject.js
+  //         let trusteds = enrichedjson.filter(filterTrusted);
+  //         console.log(trusteds);
+  //         console.log('found ' + trusteds.length + ' trusteds on ' + enrichedjson.length + ' total results');
+  //         browser.tabs.sendMessage(sender.tab.id, { json: enrichedjson, message: 'KB_DELIB' });
+  //       },
+  //       function(Error) {
+  //         console.log(Error);
+  //       }
+  //     );
+  //   });
+  // });
+  // // static test - legifrance knowledge box
+  // console.log('Looking for legifrance results');
+  // searchText = json.request;
+  // searchStart = 0;
+  // resultsNumber = 10;
+  // searchUrl = 'https://www.google.fr/search?q=' + searchText + '&start=' + searchStart + '&num=' + resultsNumber.toString() + '&as_sitesearch=legifrance.gouv.fr';
+  // console.log(searchUrl);
+  // getHTML(searchUrl, function(response) {
+  //   parseGoogle(response, json, function(resultsjson) {
+  //     checkTrusted(resultsjson).then(
+  //       function(enrichedjson) {
+  //         //send next trusted results back to inject.js
+  //         let trusteds = enrichedjson.filter(filterTrusted);
+  //         console.log(trusteds);
+  //         console.log('found ' + trusteds.length + ' trusteds on ' + enrichedjson.length + ' total results');
+  //         browser.tabs.sendMessage(sender.tab.id, { json: enrichedjson, message: 'KB_LOI' });
+  //       },
+  //       function(Error) {
+  //         console.log(Error);
+  //       }
+  //     );
+  //   });
+  // });
+  // // static test - state results knowledge box
+  // console.log('Looking for legifrance results');
+  // searchText = json.request;
+  // searchStart = 0;
+  // resultsNumber = 10;
+  // searchUrl = 'https://www.google.fr/search?q=' + searchText + '&start=' + searchStart + '&num=' + resultsNumber.toString() + '&as_sitesearch=gouv.fr';
+  // console.log(searchUrl);
+  // getHTML(searchUrl, function(response) {
+  //   console.log(response);
+  //   parseGoogle(response, json, function(resultsjson) {
+  //     checkTrusted(resultsjson).then(
+  //       function(enrichedjson) {
+  //         //send next trusted results back to inject.js
+  //         let trusteds = enrichedjson.filter(filterTrusted);
+  //         console.log(trusteds);
+  //         console.log('found ' + trusteds.length + ' trusteds on ' + enrichedjson.length + ' total results');
+  //         browser.tabs.sendMessage(sender.tab.id, { json: enrichedjson, message: 'KB_GOUV' });
+  //       },
+  //       function(Error) {
+  //         console.log(Error);
+  //       }
+  //     );
+  //   });
+  // });
 }
 
 function getActiveTab() {

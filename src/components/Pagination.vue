@@ -21,16 +21,15 @@
           Résultats
           <span class="sdc-font-medium">{{ (currentPage - 1) * itemsPerPage + 1 }}</span>
           à
-          <span class="sdc-font-medium">{{ currentPage * itemsPerPage }}</span>
-          sur
-          <span class="sdc-font-medium">{{ countItems }}</span>
-          Sources de confiance
+          <span class="sdc-font-medium">
+            {{ currentPage * itemsPerPage > countItems ? countItems : currentPage * itemsPerPage }}
+          </span>
         </p>
       </div>
 
       <div>
         <nav class="sdc-relative sdc-z-0 sdc-inline-flex sdc-shadow-sm">
-          <a
+          <!-- <a
             ref="sdcPagePrev"
             href="#"
             class="sdc-relative sdc-inline-flex sdc-items-center sdc-px-2 sdc-py-2 
@@ -46,7 +45,7 @@
             <svg class="sdc-h-5 sdc-w-5" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
             </svg>
-          </a>
+          </a> -->
 
           <a
             v-for="i in countPages"
@@ -67,6 +66,7 @@
           </a>
 
           <a
+            v-if="nextButton"
             ref="sdcPageNext"
             href="#"
             class="-sdc-ml-px sdc-relative sdc-inline-flex sdc-items-center sdc-px-2 sdc-py-2 
@@ -107,6 +107,11 @@ export default {
       type: Number,
       required: true,
     },
+
+    nextButton: {
+      type: Boolean,
+      default: false,
+    },
   },
 
   computed: {
@@ -129,15 +134,26 @@ export default {
 
   methods: {
     updatePage: function(pageNumber) {
-      if (pageNumber == 'prev') {
-        this.currentPage = this.currentPage > 1 ? this.currentPage - 1 : this.currentPage;
-      } else if (pageNumber == 'next') {
-        this.currentPage = this.currentPage < this.countPages ? this.currentPage + 1 : this.countPages;
-      } else this.currentPage = pageNumber;
+      var select;
+
+      switch (pageNumber) {
+        case 'prev':
+          this.currentPage = this.currentPage > 1 ? this.currentPage - 1 : this.currentPage;
+          select = 'prev';
+          break;
+
+        case 'next':
+          this.currentPage = this.currentPage < this.countPages ? this.currentPage + 1 : this.countPages;
+          select = 'next';
+          break;
+
+        default:
+          select = this.currentPage = pageNumber;
+      }
 
       this.focusPageSelector();
 
-      this.$emit('pageselect', this.currentPage);
+      this.$emit('pageselect', select);
     },
 
     focusPageSelector: function() {

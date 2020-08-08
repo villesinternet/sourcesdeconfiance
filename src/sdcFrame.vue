@@ -6,11 +6,13 @@
           <img class="sdc-h-6" :src="this.asset('logos/sdc-gray-text.png')" alt="Logo Sources de Confiance" />
         </div>
 
-        <div class="sdc-px-2 sdc-pb-2 sdc-text-gray-500 sdc-text-s">{{ this.resultsCount }} résultats de confiance sur les {{ this.se.start }} premiers résultats</div>
+        <div class="sdc-px-2 sdc-pb-2 sdc-text-gray-500 sdc-text-s">{{ this.resultsCount }} résultats de confiance sur les {{ this.se.start }} premier résultats</div>
 
         <Result v-for="result in currentResults" :key="result.url" :result="result" class="sdc-p-2" />
 
-        <Pagination v-model="currentPage" :countItems="results.length" :itemsPerPage="10" @pageselect="pageSelect" />
+        <Rotate v-if="waitingFoResults" />
+
+        <Pagination v-show="results.length" v-model="currentPage" :countItems="results.length" :itemsPerPage="10" @pageselect="pageSelect" :nextButton="!allFetched" />
       </div>
     </div>
   </div>
@@ -18,13 +20,13 @@
 
 <script>
 import Vue from 'vue';
+
 import Result from './components/Result.vue';
 import Pagination from './components/Pagination.vue';
 import Tab from './components/Tab.vue';
 
-// Load SERP highlighting styles
-// import styles from './assets/styles/google_highlight.css';
-// import tailwind from './assets/styles/tailwind.css';
+import Pulse from './components/Pulse.vue';
+import Rotate from './components/Rotate.vue';
 
 export default {
   name: 'SdC',
@@ -33,15 +35,11 @@ export default {
     Pagination,
     Result,
     Tab,
+    Pulse,
+    Rotate,
   },
 
   props: {
-    // Maximum search engine requests
-    maxRequests: {
-      type: Number,
-      default: 10,
-    },
-
     // Trusted results per page
     resultsPerPage: {
       type: Number,
@@ -51,13 +49,13 @@ export default {
     // Delay between 2 requests
     requestDelay: {
       type: Number,
-      default: 1000,
+      default: 1500,
     },
 
     // Nb of results per search engine request
     resultsPerSERequest: {
       type: Number,
-      default: 50,
+      default: 10,
     },
   },
 
@@ -84,6 +82,7 @@ export default {
         resultsPerPage: 10, // Number of items returned per request
         currentPage: 0, // Current Search engine page
         initialPage: 1, // The SERP page index
+        additionalSearchLinks: [], // Links to the additional search pages
       },
 
       interval: null,
@@ -91,6 +90,8 @@ export default {
       currentPage: 1, // current Trusted results page
 
       pendingRequest: false, // there is an ongoing SE request
+
+      freshStart: true,
     };
   },
 
@@ -104,14 +105,12 @@ export default {
     this.tab = new TabClass();
     this.tab.$parent = this; // There must be something more elegant
     // Set title
-    this.tab.$slots.default = this.resultsCount;
+    this.tab.$slots.default = this.title;
     this.tab.$mount();
-    this.$on('tabClick', function() {
-      this.toggle();
-    });
-    // Insert in google's menu bar
-    var menuBar = document.getElementById('hdtb-msb-vis');
-    menuBar.insertBefore(this.tab.$el, menuBar.children[1]);
+    // this.$on('tabClick', function() {
+    //   this.toggle();
+    // });
+    this.$searchEngine.injectMenuItem(this.tab.$el, this.toggle);
 
     // The current query string
     this.queryString = document.getElementsByName('q')[0].value;
@@ -119,6 +118,11 @@ export default {
     // Handler for all messages coming from background.js (and the others)
     var browser = require('webextension-polyfill');
     browser.runtime.onMessage.addListener(this.handleMessage);
+
+    // Get all possible search links for this query
+    this.searchLinks = this.$searchEngine.getSearchLinks();
+    this.maxRequests = this.searchLinks.length;
+    console.log('maximum number of searches=' + this.maxRequests);
 
     // Get the trusted results
     this.getResults();
@@ -133,6 +137,22 @@ export default {
       var start = (this.currentPage - 1) * this.resultsPerPage;
       var stop = start + this.resultsPerPage;
       return this.results.slice(start, stop);
+    },
+
+    allFetched: function() {
+      return this.se.requestsCount >= this.maxRequests;
+    },
+
+    pageIncomplete: function() {
+      return this.currentResults.length < this.resultsPerPage;
+    },
+
+    waitingFoResults: function() {
+      return this.pendingRequest || (this.pageIncomplete && !this.allFetched);
+    },
+
+    title: function() {
+      return this.results.length + (this.allFetched ? '' : '+');
     },
   },
 
@@ -160,7 +180,7 @@ export default {
     },
 
     sendRequest: function(message) {
-      console.log('>sendRequest message.type=' + message.type);
+      console.log('>sendRequest');
 
       this.se.currentPage++;
       this.se.requestsCount++;
@@ -174,6 +194,7 @@ export default {
 
       // Send request
       this.pendingRequest = true;
+      console.log('message.type=' + message.type);
       browser.runtime.sendMessage(message);
     },
 
@@ -203,23 +224,39 @@ export default {
         userAgent: window.navigator.userAgent,
         apiserver: this.storedSettings.apiserver,
         searchengine: 'google',
+        //doc: document.getElementsByClassName('g'),
         type: 'CATEGORIZE',
       };
       this.sendRequest(request);
     },
 
     nextResults: function() {
-      console.log('>nextResults');
+      console.log('>nextResults this.se.currentPage=' + this.se.currentPage);
+      console.log('url=' + this.searchLinks[this.se.currentPage]);
 
       // Fetch the results and categorize them
+      // var request = {
+      //   request: this.queryString,
+      //   userAgent: window.navigator.userAgent,
+      //   apiserver: this.storedSettings.apiserver,
+      //   searchengine: 'google',
+      //   resultsPerPage: this.resultsPerSERequest,
+      //   currentPage: this.se.currentPage,
+      //   searchLink: this.searchLinks[this.se.currentPage],
+      //   start: this.se.start,
+      //   type: 'UNKNOWN',
+      // };
+      //
+      var results = this.extractFromSERP();
+
+      // Send results to API to categorize the results
       var request = {
         request: this.queryString,
+        results: results,
         userAgent: window.navigator.userAgent,
         apiserver: this.storedSettings.apiserver,
         searchengine: 'google',
-        resultsPerPage: this.resultsPerSERequest,
-        currentPage: this.se.currentPage,
-        start: this.se.start,
+        //doc: document.getElementsByClassName('g'),
         type: 'FETCH_AND_CATEGORIZE',
       };
       this.sendRequest(request);
@@ -230,13 +267,18 @@ export default {
     getResults: function() {
       console.log('>getResults');
 
+      if (this.currentResults.length >= this.resultsPerPage) {
+        console.log('already have all the results for this page');
+        return;
+      }
+
       // We're entering an interval loop to send SE requests at an acceptable pace
       this.interval = setInterval(
         function() {
-          console.log('>interval');
+          console.log('>into interval');
 
           // We have reached the maximum number of SE requests for now
-          if (this.se.requestsCount >= this.maxRequests) {
+          if (this.allFetched) {
             console.log('Max request count reach (' + this.maxRequests + ')');
             console.log('clearing interval = ' + this.interval);
             clearInterval(this.interval); // No more interval
@@ -252,16 +294,18 @@ export default {
           // -- First case
           // We just have been setup
           // We will use the SERP to extract the first trusted results
-          if (this.results.length == 0) {
+          if (this.freshStart) {
             this.firstResults();
             // Let the interval loop continue so that we have more results if needed
+            this.freshStart = false;
             return;
           }
 
           // -- Second case
           // We already have some results, but not enough to fill
           // the current page
-          if (this.currentResults.length < this.resultsPerPage) {
+          if (this.pageIncomplete) {
+            console.log('page ' + this.currentPage + ' incomplete.');
             this.nextResults();
             return;
           }
@@ -285,8 +329,7 @@ export default {
         return;
       }
 
-      // We're no longer are waiting for a request answer
-      console.log('this.pendingRequest was ' + this.pendingRequest + '. Setting to false.');
+      // We're no longer waiting for a request answer
       this.pendingRequest = false;
 
       switch (request.message) {
@@ -298,7 +341,7 @@ export default {
           console.log('this.results.length=' + this.results.length);
 
           // Refresh tab count
-          this.tab.$slots.default = this.results.length;
+          this.tab.$slots.default = this.title;
           this.tab.$forceUpdate();
 
           // Mark the trusted results in the SERP
@@ -312,7 +355,7 @@ export default {
         case 'NEXT_RESULTS':
           // Keep only filtered results
           var trusted = request.json.filter(this.filterTrusted);
-          console.log('trusted.length=' + trusted.length + ', this.results.length=' + this.results.length);
+          console.log('trusted.length=' + trusted.length);
 
           // Make sure we do not have duplicates
           // for each of the new results
@@ -333,7 +376,7 @@ export default {
           console.log('this.results.length=' + this.results.length);
 
           // Signal we have new results. Update the view
-          this.tab.$slots.default = this.results.length;
+          this.tab.$slots.default = this.title;
           this.tab.$forceUpdate();
 
           // Request is not pending anymore
@@ -402,35 +445,33 @@ export default {
       }
     },
 
+    toggle: function(isVsibile) {
+      console.log('>toggle isVsible=' + isVisible);
+
+      this.isActive != this.isActive;
+    },
+
     // A pagination button has been pressed: see if we need to add results
-    pageSelect: function(page) {
-      this.currentPage = page;
-      console.log('>pageSelect: page = ' + page);
+    pageSelect: function(select) {
+      console.log('>pageSelect: page = ' + select);
+
+      switch (select) {
+        case 'next':
+          if (!this.pendingRequest && !this.allFetched) this.currentPage++;
+          break;
+        case 'prev':
+          if (this.currentPage > 1) this.currentPage--;
+          break;
+        default:
+          this.currentPage = select;
+          break;
+      }
       console.log('this.currentPage=' + this.currentPage);
       this.getResults();
     },
 
     asset: function(name) {
       return browser.runtime.getURL(`/assets/${name}`);
-    },
-
-    toggle: function() {
-      this.isActive = !this.isActive;
-
-      // Manage Google page elements
-      // Hide all 'All' elements
-      document.getElementById('appbar').style.display = this.isActive ? 'none' : '';
-      document.getElementById('atvcap').style.display = this.isActive ? 'none' : '';
-      document.getElementById('rcnt').style.display = this.isActive ? 'none' : '';
-      document.getElementById('footcnt').style.display = this.isActive ? 'none' : '';
-      document.getElementById('xfootw').style.display = this.isActive ? 'none' : '';
-      // Update menu bar
-      for (let el of document.getElementById('cnt').getElementsByClassName('mw')) {
-        el.style.display = this.isActive ? 'none' : '';
-      }
-
-      // Manage our own Frame
-      //if (this.frameVue.$el) this.frameVue.$el.style.display = this.isActive ? 'block' : 'none';
     },
   },
 };
