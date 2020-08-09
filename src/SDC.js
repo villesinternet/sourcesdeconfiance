@@ -1,6 +1,6 @@
 import Vue from 'vue';
-import sdcTab from './sdcTab';
-import sdcFrame from './sdcFrame';
+//import sdcTab from './tab';
+import sdcFrame from './frame';
 
 export function run(searchEngine) {
   console.log('>SDC:run');

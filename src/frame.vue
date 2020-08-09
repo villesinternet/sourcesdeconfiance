@@ -234,31 +234,19 @@ export default {
       console.log('>nextResults this.se.currentPage=' + this.se.currentPage);
       console.log('url=' + this.searchLinks[this.se.currentPage]);
 
-      // Fetch the results and categorize them
-      // var request = {
-      //   request: this.queryString,
-      //   userAgent: window.navigator.userAgent,
-      //   apiserver: this.storedSettings.apiserver,
-      //   searchengine: 'google',
-      //   resultsPerPage: this.resultsPerSERequest,
-      //   currentPage: this.se.currentPage,
-      //   searchLink: this.searchLinks[this.se.currentPage],
-      //   start: this.se.start,
-      //   type: 'UNKNOWN',
-      // };
-      //
-      var results = this.extractFromSERP();
-
-      // Send results to API to categorize the results
+      //Fetch the results and categorize them
       var request = {
         request: this.queryString,
-        results: results,
         userAgent: window.navigator.userAgent,
         apiserver: this.storedSettings.apiserver,
         searchengine: 'google',
-        //doc: document.getElementsByClassName('g'),
+        resultsPerPage: this.resultsPerSERequest,
+        currentPage: this.se.currentPage,
+        searchLink: this.searchLinks[this.se.currentPage],
+        start: this.se.start,
         type: 'FETCH_AND_CATEGORIZE',
       };
+
       this.sendRequest(request);
 
       return true;
@@ -445,10 +433,10 @@ export default {
       }
     },
 
-    toggle: function(isVsibile) {
-      console.log('>toggle isVsible=' + isVisible);
-
-      this.isActive != this.isActive;
+    // Called from searchEngine.$injectMenuItem activation / deactivation
+    toggle: function(isVisible) {
+      console.log('>toggle');
+      this.isActive = isVisible;
     },
 
     // A pagination button has been pressed: see if we need to add results

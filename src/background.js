@@ -3,7 +3,7 @@ import * as FakeResults from './background/fakeResults.js';
 
 const extensionversion = '1.1';
 
-const useFakeResults = true; // Set to true to generate our own results rather than asking the SE
+const useFakeResults = false; // Set to true to generate our own results rather than asking the SE
 
 // DEFAULT SETTINGS
 // If there is nothing in storage, use these values.
@@ -109,9 +109,18 @@ function handleMessage(json, sender, sendResponse) {
         return;
       }
 
+      console.log(json);
       // Use the prodived search link if it is given
-      if (json.searchLink) var searchUrl = json.searchLink;
-      else var searchUrl = 'https://www.google.fr/search?q=' + json.request + '&start=' + json.start + '&num=' + json.resultsPerPage.toString();
+      var searchUrl;
+      if (json.searchLink) {
+        console.log('here');
+        searchUrl = json.searchLink;
+        console.log('here+');
+      } else {
+        console.log('there');
+        searchUrl = 'https://www.google.fr/search?q=' + json.request + '&start=' + json.start + '&num=' + json.resultsPerPage.toString();
+        console.log('there+');
+      }
       console.log(searchUrl);
 
       getHTML(searchUrl, function(response) {

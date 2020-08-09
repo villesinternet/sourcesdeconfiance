@@ -22,7 +22,7 @@
   "content_scripts": [
     {
       "matches": ["https://www.google.com/search*", "https://www.google.fr/search*"],
-      "js": ["browser-polyfill.js", "./google.js"],
+      "js": ["browser-polyfill.js", "google.js"],
       "css": ["google.css"]
     },
     {
