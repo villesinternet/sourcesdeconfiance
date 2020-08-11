@@ -95,39 +95,6 @@ export default {
     };
   },
 
-  mounted: function() {
-    // `this` points to the vm instance
-
-    console.log('>sdcFrame:mounted');
-
-    // Create menu item
-    var TabClass = Vue.extend(Tab);
-    this.tab = new TabClass();
-    this.tab.$parent = this; // There must be something more elegant
-    // Set title
-    this.tab.$slots.default = this.title;
-    this.tab.$mount();
-    // this.$on('tabClick', function() {
-    //   this.toggle();
-    // });
-    this.$searchEngine.injectMenuItem(this.tab.$el, this.toggle);
-
-    // The current query string
-    this.queryString = document.getElementsByName('q')[0].value;
-
-    // Handler for all messages coming from background.js (and the others)
-    var browser = require('webextension-polyfill');
-    browser.runtime.onMessage.addListener(this.handleMessage);
-
-    // Get all possible search links for this query
-    this.searchLinks = this.$searchEngine.getSearchLinks();
-    this.maxRequests = this.searchLinks.length;
-    console.log('maximum number of searches=' + this.maxRequests);
-
-    // Get the trusted results
-    this.getResults();
-  },
-
   computed: {
     resultsCount: function() {
       return this.results.length;
@@ -156,73 +123,74 @@ export default {
     },
   },
 
+  mounted: function() {
+    console.log('>sdcFrame:mounted');
+
+    this.prepareUX();
+
+    this.prepareSearch();
+
+    // Get the trusted results
+    this.getResults();
+  },
+
   methods: {
-    // extractFromSERP: function() {
-    //   const elements = document.getElementsByClassName('g');
-    //   var results = [];
-    //   for (var i = 0; i < elements.length; i++) {
-    //     var el = elements[i].getElementsByClassName('rc'); // test if result has expected child. prevents code from breaking when a special info box occurs.
-    //     if (el.length > 0 && !elements[i].classList.contains('kno-kp')) {
-    //       //quickfix do not analyse knowledge boxes. Could be a specific analysis instead
-    //       var url = elements[i].querySelector('.rc a').href;
-    //       var name = elements[i].querySelector('.rc .r a h3').textContent;
-    //       var snippet = elements[i].querySelector('.rc .s .st') ? elements[i].querySelector('.rc .s .st').textContent : '';
-    //       results.push({
-    //         id: i,
-    //         url: url,
-    //         name: name,
-    //         snippet: snippet,
-    //       });
-    //     }
-    //   }
+    prepareUX: function() {
+      console.log('>prepareUX');
 
-    //   return results;
-    // },
+      // Create menu item
+      var TabClass = Vue.extend(Tab);
+      this.tab = new TabClass();
+      this.tab.$parent = this; // There must be something more elegant
+      // Set title
+      this.tab.$slots.default = this.title;
+      this.tab.$mount();
 
-    sendRequest: function(message) {
+      this.$SE.injectMenuItem(this.tab.$el, this.toggle);
+    },
+
+    prepareSearch: function() {
+      console.log('>prepareSearch');
+
+      // The current query string
+      this.queryString = document.getElementsByName('q')[0].value;
+
+      // Get all possible search links for this query
+      this.searchLinks = this.$SE.getSearchLinks();
+      this.maxRequests = this.searchLinks.length;
+      console.log('maximum number of searches=' + this.maxRequests);
+
+      // Handler for all messages coming from background.js (and the others)
+      //var browser = require('webextension-polyfill');
+      browser.runtime.onMessage.addListener(this.handleMessage);
+    },
+
+    sendRequest: function(msg) {
       console.log('>sendRequest');
 
       this.se.currentPage++;
-      this.se.requestsCount++;
-      this.se.start += this.se.resultsPerPage;
 
-      // Skip this page since it was the initial SERP
-      if ((message.type == 'GET_NEXT_RESULTS' || message.type == 'FETCH_AND_CATEGORIZE') && this.se.currentPage == this.se.initialPage) {
-        console.log('this.se.currentPage == this.se.initialPage. Returning.');
-        return;
-      }
+      // Fill wiht default values
+      msg.request = this.queryString;
+      msg.userAgent = window.navigator.userAgent;
+      msg.searchengine = this.$SE.name;
 
-      // Send request
+      // Send msg
       this.pendingRequest = true;
-      console.log('message.type=' + message.type);
-      browser.runtime.sendMessage(message);
+      console.log('msg.type=' + msg.type);
+      browser.runtime.sendMessage(msg);
     },
 
     firstResults: function() {
       console.log('>firstResults++');
 
-      // Calculate initial SERP results per page
-      if (window.location.href.indexOf('?start=') != -1 || window.location.href.indexOf('&start=') != -1) {
-        var url = new URL(window.location.href);
-        //this.se.start = parseInt(url.searchParams.get('start'));
-        this.se.initialPage = 1 + this.se.start / this.se.resultsPerPage;
-      }
-      var resultsLength = document.querySelectorAll('.g .rc').length;
-      if (this.se.initialPage == 1 && resultsLength > 10) {
-        //quickfix for first SERP results number variable due to knowledge boxes
-        this.se.resultsPerPage = Math.round(resultsLength / 10) * 10;
-      }
-
       // -- Process the SERP
       // Extract all results
-      var results = this.$searchEngine.extractFromSERP(document);
+      var results = this.$SE.extractFromSERP(document);
       // Send results to API to categorize the results
       var request = {
         request: this.queryString,
         results: results,
-        userAgent: window.navigator.userAgent,
-        apiserver: this.storedSettings.apiserver,
-        searchengine: 'google',
         type: 'CATEGORIZE',
       };
       this.sendRequest(request);
@@ -235,13 +203,8 @@ export default {
       //Fetch the results and categorize them
       var request = {
         request: this.queryString,
-        userAgent: window.navigator.userAgent,
-        apiserver: this.storedSettings.apiserver,
-        searchengine: 'google',
-        resultsPerPage: this.resultsPerSERequest,
-        currentPage: this.se.currentPage,
         searchLink: this.searchLinks[this.se.currentPage],
-        start: this.se.start,
+        //start: this.se.start,
         type: 'FETCH_AND_CATEGORIZE',
       };
 

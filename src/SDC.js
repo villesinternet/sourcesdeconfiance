@@ -1,5 +1,4 @@
 import Vue from 'vue';
-//import sdcTab from './tab';
 import sdcFrame from './frame';
 
 export function run(searchEngine) {
@@ -8,7 +7,7 @@ export function run(searchEngine) {
   var frameDiv = searchEngine.injectSDC();
 
   // Global data related to the search engine
-  Vue.prototype.$searchEngine = searchEngine;
+  Vue.prototype.$SE = searchEngine;
 
   var frameVue = new Vue({
     el: frameDiv,
