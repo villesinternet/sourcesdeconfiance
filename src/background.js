@@ -1,5 +1,5 @@
 import * as FakeResults from './background/fakeResults.js';
-// import * as Google from './background/google.js'
+import * as google from './helpers/google.js';
 
 const extensionversion = '1.1';
 
@@ -85,6 +85,9 @@ function handleMessage(json, sender, sendResponse) {
   switch (json.type) {
     case 'GET_SERP':
     case 'CATEGORIZE':
+      console.log('json.doc=');
+      //console.log(json.doc);
+
       checkTrusted(json).then(
         function(enrichedjson) {
           browser.tabs.sendMessage(sender.tab.id, { json: enrichedjson, message: 'HIGHLIGHT' });

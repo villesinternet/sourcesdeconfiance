@@ -157,27 +157,27 @@ export default {
   },
 
   methods: {
-    extractFromSERP: function() {
-      const elements = document.getElementsByClassName('g');
-      var results = [];
-      for (var i = 0; i < elements.length; i++) {
-        var el = elements[i].getElementsByClassName('rc'); // test if result has expected child. prevents code from breaking when a special info box occurs.
-        if (el.length > 0 && !elements[i].classList.contains('kno-kp')) {
-          //quickfix do not analyse knowledge boxes. Could be a specific analysis instead
-          var url = elements[i].querySelector('.rc a').href;
-          var name = elements[i].querySelector('.rc .r a h3').textContent;
-          var snippet = elements[i].querySelector('.rc .s .st') ? elements[i].querySelector('.rc .s .st').textContent : '';
-          results.push({
-            id: i,
-            url: url,
-            name: name,
-            snippet: snippet,
-          });
-        }
-      }
+    // extractFromSERP: function() {
+    //   const elements = document.getElementsByClassName('g');
+    //   var results = [];
+    //   for (var i = 0; i < elements.length; i++) {
+    //     var el = elements[i].getElementsByClassName('rc'); // test if result has expected child. prevents code from breaking when a special info box occurs.
+    //     if (el.length > 0 && !elements[i].classList.contains('kno-kp')) {
+    //       //quickfix do not analyse knowledge boxes. Could be a specific analysis instead
+    //       var url = elements[i].querySelector('.rc a').href;
+    //       var name = elements[i].querySelector('.rc .r a h3').textContent;
+    //       var snippet = elements[i].querySelector('.rc .s .st') ? elements[i].querySelector('.rc .s .st').textContent : '';
+    //       results.push({
+    //         id: i,
+    //         url: url,
+    //         name: name,
+    //         snippet: snippet,
+    //       });
+    //     }
+    //   }
 
-      return results;
-    },
+    //   return results;
+    // },
 
     sendRequest: function(message) {
       console.log('>sendRequest');
@@ -199,7 +199,7 @@ export default {
     },
 
     firstResults: function() {
-      console.log('>firstResults');
+      console.log('>firstResults++');
 
       // Calculate initial SERP results per page
       if (window.location.href.indexOf('?start=') != -1 || window.location.href.indexOf('&start=') != -1) {
@@ -215,8 +215,7 @@ export default {
 
       // -- Process the SERP
       // Extract all results
-      var results = this.extractFromSERP();
-
+      var results = this.$searchEngine.extractFromSERP(document);
       // Send results to API to categorize the results
       var request = {
         request: this.queryString,
@@ -224,7 +223,6 @@ export default {
         userAgent: window.navigator.userAgent,
         apiserver: this.storedSettings.apiserver,
         searchengine: 'google',
-        //doc: document.getElementsByClassName('g'),
         type: 'CATEGORIZE',
       };
       this.sendRequest(request);
@@ -470,5 +468,5 @@ export default {
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import './assets/styles/google_highlight.css';
+@import './assets/styles/google.css';
 </style>

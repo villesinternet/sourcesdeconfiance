@@ -1,4 +1,5 @@
 import * as SDC from './sdc.js';
+import * as helpers from './helpers/google.js';
 
 console.log('Google SDC instance creation');
 
@@ -6,7 +7,7 @@ console.log('Google SDC instance creation');
 var google = {
   name: 'google',
   getSearchLinks: getSearchLinks, // Build links table to get additional results
-  extractFromSERP: extractFromSERP, // Extract results from current page
+  extractFromSERP: helpers.extractFromSERP, // Extract results from current page
   injectSDC: injectSDC, // Inject SDC Frame
   injectMenuItem: injectMenuItem, // Inject SDC Menu item
 };
@@ -26,29 +27,6 @@ if (search.get('tbm')) {
 } else {
   // And... off we go !
   SDC.run(google);
-}
-
-// Extract results from the the document's SERP
-function extractFromSERP() {
-  const elements = document.getElementsByClassName('g');
-  var results = [];
-  for (var i = 0; i < elements.length; i++) {
-    var el = elements[i].getElementsByClassName('rc'); // test if result has expected child. prevents code from breaking when a special info box occurs.
-    if (el.length > 0 && !elements[i].classList.contains('kno-kp')) {
-      //quickfix do not analyse knowledge boxes. Could be a specific analysis instead
-      var url = elements[i].querySelector('.rc a').href;
-      var name = elements[i].querySelector('.rc .r a h3').textContent;
-      var snippet = elements[i].querySelector('.rc .s .st') ? elements[i].querySelector('.rc .s .st').textContent : '';
-      results.push({
-        id: i,
-        url: url,
-        name: name,
-        snippet: snippet,
-      });
-    }
-  }
-
-  return results;
 }
 
 // Utility function to list the additional search pages we can scrap

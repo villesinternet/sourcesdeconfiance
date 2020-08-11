@@ -1,4 +1,5 @@
 .hdtb-mitem {
+  /* Fix an issue with tailwind default css settings & google's toolbar */
   height: auto;
 }
 
