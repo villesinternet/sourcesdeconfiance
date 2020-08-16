@@ -10,7 +10,11 @@
 
         <Result v-for="result in currentResults" :key="result.url" :result="result" class="sdc-p-2" />
 
-        <Rotate v-if="waitingFoResults" />
+        <div v-if="waitingFoResults" class="sdc-flex">
+          <div class="sdc-m-auto">
+            <Rotate />
+          </div>
+        </div>
 
         <Pagination v-show="results.length" v-model="currentPage" :countItems="results.length" :itemsPerPage="10" @pageselect="pageSelect" :nextButton="!allFetched" />
       </div>

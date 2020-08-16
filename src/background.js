@@ -3,7 +3,7 @@ import * as google from './helpers/google.js';
 
 const extensionversion = '1.1';
 
-const useFakeResults = false; // Set to true to generate our own results rather than asking the SE
+const useFakeResults = true; // Set to true to generate our own results rather than asking the SE
 
 // DEFAULT SETTINGS
 // If there is nothing in storage, use these values.
@@ -116,13 +116,11 @@ function handleMessage(json, sender, sendResponse) {
       // Use the prodived search link if it is given
       var searchUrl;
       if (json.searchLink) {
-        console.log('here');
         searchUrl = json.searchLink;
-        console.log('here+');
+        console.log('use provided search link: ' + json.searchLink);
       } else {
-        console.log('there');
+        console.log('generating search link: start=' + json.start + ', resultsPerPage=' + json.resultsPerPage.toString());
         searchUrl = 'https://www.google.fr/search?q=' + json.request + '&start=' + json.start + '&num=' + json.resultsPerPage.toString();
-        console.log('there+');
       }
       console.log(searchUrl);
 
