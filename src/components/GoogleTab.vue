@@ -10,7 +10,7 @@
             <path d="M22 20.59l-5.69-5.69A7.96 7.96 0 0 0 18 10h-2a6 6 0 0 1-6 6v2c1.85 0 3.52-.64 4.88-1.68l5.69 5.69L22 20.59" fill="#4285F4"></path>
           </svg>
         </span>
-        NewSdc (<slot />)
+        <slot />
       </a>
     </span>
 
@@ -20,14 +20,14 @@
           <path d="M16.32 14.88a8.04 8.04 0 1 0-1.44 1.44l5.76 5.76 1.44-1.44-5.76-5.76zm-6.36 1.08c-3.36 0-6-2.64-6-6s2.64-6 6-6 6 2.64 6 6-2.64 6-6 6"></path>
         </svg>
       </span>
-      NewSdc (<slot />)
+      <slot />
     </span>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'Tab',
+  name: 'GoogleTab',
 
   data() {
     return {
@@ -61,10 +61,6 @@ export default {
       for (let el of document.getElementById('cnt').getElementsByClassName('mw')) {
         el.style.display = this.isActive ? 'none' : '';
       }
-
-      // Manage our own Frame
-      // if (this.$parent)
-      //   this.$parent.$el.style.display = this.isActive ? 'block' : 'none';
     },
 
     toggle: function() {

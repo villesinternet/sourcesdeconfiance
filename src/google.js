@@ -21,6 +21,6 @@ var google = {
 };
 
 // We only need to run SDC on the "All" Google pane (not images, news, etc)
-if (!new URLSearchParams(window.location.search).get('tbm')) sdc.run(google);
 // And... off we go !
+if (!new URLSearchParams(window.location.search).get('tbm')) sdc.run(google);
 else console.log('not launching. tbm=' + search.get('tbm'));

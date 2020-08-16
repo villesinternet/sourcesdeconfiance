@@ -27,7 +27,7 @@ import Vue from 'vue';
 
 import Result from './components/Result.vue';
 import Pagination from './components/Pagination.vue';
-import Tab from './components/Tab.vue';
+import GoogleTab from './components/GoogleTab.vue';
 
 import Pulse from './components/Pulse.vue';
 import Rotate from './components/Rotate.vue';
@@ -38,7 +38,7 @@ export default {
   components: {
     Pagination,
     Result,
-    Tab,
+    GoogleTab,
     Pulse,
     Rotate,
   },
@@ -123,7 +123,7 @@ export default {
     },
 
     title: function() {
-      return this.results.length + (this.allFetched ? '' : '+');
+      return 'Sources de Confiance (' + this.results.length + (this.allFetched ? '' : '+') + ')';
     },
   },
 
@@ -143,7 +143,16 @@ export default {
       console.log('>prepareUX');
 
       // Create menu item
-      var TabClass = Vue.extend(Tab);
+      var TabClass;
+      switch (this.$SE.name) {
+        case 'google':
+          TabClass = Vue.extend(GoogleTab);
+          break;
+        default:
+          console.log('Error: Search engine not supported: ' + this.$SE.name);
+          return;
+      }
+      console.log('Creating tab component for ' + this.$SE.name);
       this.tab = new TabClass();
       this.tab.$parent = this; // There must be something more elegant
       // Set title
