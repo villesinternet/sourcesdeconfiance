@@ -3,7 +3,7 @@
     <div v-show="isActive" class="sdc-container sdc-mx-40 sdc-pb-4 sdc-max-w-3xl">
       <div class="sdc-mt-4 sdc-border sdc-border-gray-400 sdc-rounded">
         <div class="sdc-p-2">
-          <img class="sdc-h-6" :src="this.asset('logos/sdc-gray-text.png')" alt="Logo Sources de Confiance" />
+          <img class="sdc-h-6" :src="mainLogo" alt="Logo Sources de Confiance" />
         </div>
 
         <div class="sdc-px-2 sdc-pb-2 sdc-text-gray-500 sdc-text-s">{{ this.resultsCount }} résultats de confiance sur les {{ this.se.start }} premier résultats</div>
@@ -25,11 +25,13 @@
 <script>
 import Vue from 'vue';
 
+import * as helpers from './helpers/general.js';
+
 import Result from './components/Result.vue';
 import Pagination from './components/Pagination.vue';
 import GoogleTab from './components/GoogleTab.vue';
 
-import Pulse from './components/Pulse.vue';
+//import Pulse from './components/Pulse.vue';
 import Rotate from './components/Rotate.vue';
 
 export default {
@@ -39,7 +41,7 @@ export default {
     Pagination,
     Result,
     GoogleTab,
-    Pulse,
+    //  Pulse,
     Rotate,
   },
 
@@ -120,7 +122,11 @@ export default {
     },
 
     title: function() {
-      return 'Sources de Confiance (' + this.results.length + (this.allFetched ? '' : '+') + ')';
+      return 'Sources de Confiance';
+    },
+
+    mainLogo: function() {
+      return helpers.asset('logos/sdc-gray-text.png');
     },
   },
 
@@ -154,9 +160,26 @@ export default {
       this.tab.$parent = this; // There must be something more elegant
       // Set title
       this.tab.$slots.default = this.title;
+
+      // var node = this.tab.$createElement('img');
+      // this.tab.$slots.logo_inactive = node;
+
+      // this.tab.$slots.logo_active = node;
+
+      this.tab.$slots.count = '';
       this.tab.$mount();
 
       this.$SE.injectMenuItem(this.tab.$el, this.toggle);
+    },
+
+    refreshTab: function() {
+      console.log('>refreshTab');
+      // this.tab.$slots.logo_inactive.elm.src = helpers.asset('icons/sdc-24.png');
+
+      this.tab.$slots.default = this.title;
+      this.tab.$slots.count = this.resultsCount ? '(' + this.resultsCount + (this.allFetched ? '' : '+') + ')' : '';
+
+      this.tab.$forceUpdate();
     },
 
     prepareSearch: function() {
@@ -304,8 +327,7 @@ export default {
           console.log('this.results.length=' + this.results.length);
 
           // Refresh tab count
-          this.tab.$slots.default = this.title;
-          this.tab.$forceUpdate();
+          this.refreshTab();
 
           // Mark the trusted results in the SERP
           this.highlight(request.json);
@@ -339,8 +361,7 @@ export default {
           console.log('this.results.length=' + this.results.length);
 
           // Signal we have new results. Update the view
-          this.tab.$slots.default = this.title;
-          this.tab.$forceUpdate();
+          this.refreshTab();
 
           // Request is not pending anymore
           break;
@@ -376,8 +397,11 @@ export default {
     // Called from $SE.injectMenuItem activation / deactivation
     toggle: function(isVisible) {
       console.log('>frame:toggle');
-      console.log(this.tab);
+
       this.isActive = isVisible;
+
+      // Signal the Tab SE helper of the change of status
+      this.tab.activate(this.isActive);
     },
 
     // A pagination button has been pressed: see if we need to add results
@@ -397,10 +421,6 @@ export default {
       }
       console.log('this.currentPage=' + this.currentPage);
       this.getResults();
-    },
-
-    asset: function(name) {
-      return browser.runtime.getURL(`/assets/${name}`);
     },
   },
 };
