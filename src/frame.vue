@@ -50,11 +50,8 @@ export default {
       default: 10,
     },
 
-    // Delay between 2 requests
-    requestDelay: {
-      type: Number,
-      default: 1500,
-    },
+    // Poll frequency
+    pollInterval: 1500,
 
     // Nb of results per search engine request
     resultsPerSERequest: {
@@ -89,7 +86,7 @@ export default {
         additionalSearchLinks: [], // Links to the additional search pages
       },
 
-      interval: null,
+      poll: null,
 
       currentPage: 1, // current Trusted results page
 
@@ -189,13 +186,12 @@ export default {
       msg.searchengine = this.$SE.name;
 
       // Send msg
-      this.pendingRequest = true;
       console.log('msg.type=' + msg.type);
       browser.runtime.sendMessage(msg);
     },
 
     firstResults: function() {
-      console.log('>firstResults++');
+      console.log('>firstResults');
 
       // -- Process the SERP
       // Extract all results
@@ -234,18 +230,10 @@ export default {
         return;
       }
 
-      // We're entering an interval loop to send SE requests at an acceptable pace
-      this.interval = setInterval(
+      // We're entering a polling loop to send SE requests at an acceptable pace
+      this.poll = setInterval(
         function() {
-          console.log('>into interval');
-
-          // We have reached the maximum number of SE requests for now
-          if (this.allFetched) {
-            console.log('Max request count reach (' + this.maxRequests + ')');
-            console.log('clearing interval = ' + this.interval);
-            clearInterval(this.interval); // No more interval
-            return;
-          }
+          //console.log('>polling');
 
           // Is there a pending request? Let's wait for it to complete
           if (this.pendingRequest) {
@@ -253,13 +241,24 @@ export default {
             return;
           }
 
+          // We have reached the maximum number of SE requests for now
+          if (this.allFetched) {
+            console.log('Max request count reach (' + this.maxRequests + ')');
+            clearInterval(this.poll); // No more interval
+            return;
+          }
+
           // -- First case
           // We just have been setup
           // We will use the SERP to extract the first trusted results
           if (this.freshStart) {
+            this.pendingRequest = true;
+
             this.firstResults();
+
             // Let the interval loop continue so that we have more results if needed
             this.freshStart = false;
+
             return;
           }
 
@@ -267,19 +266,21 @@ export default {
           // We already have some results, but not enough to fill
           // the current page
           if (this.pageIncomplete) {
-            console.log('page ' + this.currentPage + ' incomplete.');
-            this.nextResults();
+            this.pendingRequest = true;
+
+            setTimeout(this.nextResults, this.$SE.requestsDelay);
+
             return;
           }
 
           // We do not need to fethc more results at this stage
-          console.log('clearing interval = ' + this.interval);
-          clearInterval(this.interval); // No more interval
+          console.log('clearing polling');
+          clearInterval(this.poll); // No more polling
         }.bind(this),
-        this.requestDelay
+        100
       );
 
-      console.log('interval set to = ' + this.interval + ' for ' + this.requestDelay + ' ms.');
+      console.log('polling interval set to ' + this.$SE.requestsDelay + ' ms.');
     },
 
     handleMessage: function(request, sender, sendResponse) {
@@ -368,48 +369,14 @@ export default {
     },
 
     highlight: function(enrichedjson) {
-      //console.log('>highlight');
-      const resultslist = document.getElementsByClassName('g');
-      //check if it is the first result page, to apply specific style to the first result entry
-      if (window.location.href.indexOf('&start=0') != -1) {
-        firstresult = true;
-      } else if (window.location.href.indexOf('?start=') != -1) {
-        firstresult = false;
-      } else if (window.location.href.indexOf('&start=') != -1) {
-        firstresult = false;
-      } else {
-        var firstresult = true;
-      }
-
-      for (var i = 0; i < enrichedjson.length; i++) {
-        if (enrichedjson[i].status == 'trusted') {
-          resultslist[enrichedjson[i].id].classList.add('trusted');
-
-          if (firstresult) {
-            resultslist[enrichedjson[i].id].classList.add('trustedfirst');
-            resultslist[enrichedjson[i].id].classList.add('tooltip');
-            var para = document.createElement('span');
-            para.classList.add('tooltiptext');
-            para.appendChild(document.createTextNode('Source de confiance '));
-            let newNode = resultslist[enrichedjson[i].id];
-            newNode.appendChild(para);
-            var parentDiv = document.getElementById('rso');
-            var firstChildNode = document.getElementById('rso').firstElementChild;
-            parentDiv.insertBefore(newNode, firstChildNode);
-            firstresult = false;
-            if (resultslist[enrichedjson[i].id].classList.contains('g-blk')) {
-              //styling - only if the first trusted result is a special box mnr-c g-blk - could be improved
-              resultslist[enrichedjson[i].id].classList.remove('trustedfirst');
-              resultslist[enrichedjson[i].id].classList.add('trusted');
-            }
-          }
-        }
-      }
+      console.log('>highlight');
+      this.$SE.highlight(enrichedjson);
     },
 
-    // Called from searchEngine.$injectMenuItem activation / deactivation
+    // Called from $SE.injectMenuItem activation / deactivation
     toggle: function(isVisible) {
-      console.log('>toggle');
+      console.log('>frame:toggle');
+      console.log(this.tab);
       this.isActive = isVisible;
     },
 

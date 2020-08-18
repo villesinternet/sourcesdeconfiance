@@ -7,11 +7,13 @@ console.log('Google SDC instance creation');
 var google = {
   name: 'google',
   maxRequests: 10,
+  requestsDelay: 1500,
 
   getSearchLinks: helpers.getSearchLinks, // Build links table to get additional results
   extractFromSERP: helpers.extractFromSERP, // Extract results from current page
   injectSDC: helpers.injectSDC, // Inject SDC Frame
   injectMenuItem: helpers.injectMenuItem, // Inject SDC Menu item
+  highlight: helpers.highlight, // Highlight results in home page
 
   menu: {
     // Menu management variables

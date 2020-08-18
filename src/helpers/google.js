@@ -86,3 +86,45 @@ export function injectMenuItem(el, signalFrame) {
       signalFrame(menu.isActive);
     });
 }
+
+// Highlight results in home page
+export function highlight(enrichedjson) {
+  const resultslist = document.getElementsByClassName('g');
+
+  //check if it is the first result page, to apply specific style to the first result entry
+  var firstresult;
+  if (window.location.href.indexOf('&start=0') != -1) {
+    firstresult = true;
+  } else if (window.location.href.indexOf('?start=') != -1) {
+    firstresult = false;
+  } else if (window.location.href.indexOf('&start=') != -1) {
+    firstresult = false;
+  } else {
+    firstresult = true;
+  }
+
+  for (var i = 0; i < enrichedjson.length; i++) {
+    if (enrichedjson[i].status != 'trusted') continue;
+
+    resultslist[enrichedjson[i].id].classList.add('trusted');
+
+    if (firstresult) {
+      resultslist[enrichedjson[i].id].classList.add('trustedfirst');
+      resultslist[enrichedjson[i].id].classList.add('tooltip');
+      var para = document.createElement('span');
+      para.classList.add('tooltiptext');
+      para.appendChild(document.createTextNode('Source de confiance '));
+      let newNode = resultslist[enrichedjson[i].id];
+      newNode.appendChild(para);
+      var parentDiv = document.getElementById('rso');
+      var firstChildNode = document.getElementById('rso').firstElementChild;
+      parentDiv.insertBefore(newNode, firstChildNode);
+      firstresult = false;
+      if (resultslist[enrichedjson[i].id].classList.contains('g-blk')) {
+        //styling - only if the first trusted result is a special box mnr-c g-blk - could be improved
+        resultslist[enrichedjson[i].id].classList.remove('trustedfirst');
+        resultslist[enrichedjson[i].id].classList.add('trusted');
+      }
+    }
+  }
+}
