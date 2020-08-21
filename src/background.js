@@ -3,7 +3,7 @@ import * as google from './helpers/google.js';
 
 const extensionversion = '1.1';
 
-const useFakeResults = true; // Set to true to generate our own results rather than asking the SE
+const useFakeResults = false; // Set to true to generate our own results rather than asking the SE
 
 // DEFAULT SETTINGS
 // If there is nothing in storage, use these values.

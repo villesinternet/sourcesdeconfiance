@@ -158,23 +158,20 @@ export default {
       console.log('Creating tab component for ' + this.$SE.name);
       this.tab = new TabClass();
       this.tab.$parent = this; // There must be something more elegant
-      // Set title
-      this.tab.$slots.default = this.title;
-
-      // var node = this.tab.$createElement('img');
-      // this.tab.$slots.logo_inactive = node;
-
-      // this.tab.$slots.logo_active = node;
-
-      this.tab.$slots.count = '';
       this.tab.$mount();
 
       this.$SE.injectMenuItem(this.tab.$el, this.toggle);
+
+      // Set title
+      this.refreshTab();
+
+      // this.tab.$slots.default = this.title;
+      // this.tab.$slots.count = '';
     },
 
+    // Refresh tab's title
     refreshTab: function() {
       console.log('>refreshTab');
-      // this.tab.$slots.logo_inactive.elm.src = helpers.asset('icons/sdc-24.png');
 
       this.tab.$slots.default = this.title;
       this.tab.$slots.count = this.resultsCount ? '(' + this.resultsCount + (this.allFetched ? '' : '+') + ')' : '';

@@ -1,43 +1,27 @@
 <template>
   <div @click="click" class="hdtb-mitem hdtb-imb" :class="{ 'hdtb-msel': isActive }" aria-hidden="true">
     <span v-if="isActive">
-      <a class="q qs" href="#" data-sc="A">
-        <slot name="logo_active">
-          <!-- Default active logo -->
-          <img :src="logo" style="display:inline;" />
-          <!-- <span class="HF9Klc iJddsb" style="height:16px;width:16px">
-            <svg focusable="false" viewBox="0 0 24 24">
-              <path d="M10 2v2a6 6 0 0 1 6 6h2a8 8 0 0 0-8-8" fill="#34A853"></path>
-              <path d="M10 4V2a8 8 0 0 0-8 8h2c0-3.3 2.7-6 6-6" fill="#EA4335"></path>
-              <path d="M4 10H2a8 8 0 0 0 8 8v-2c-3.3 0-6-2.69-6-6" fill="#FBBC04"></path>
-              <path d="M22 20.59l-5.69-5.69A7.96 7.96 0 0 0 18 10h-2a6 6 0 0 1-6 6v2c1.85 0 3.52-.64 4.88-1.68l5.69 5.69L22 20.59" fill="#4285F4"></path>
-            </svg>
-          </span> -->
-        </slot>
+      <slot name="logo_active">
+        <!-- Default active logo -->
+        <img :src="logo" style="display:inline;" />
+      </slot>
 
-        <!-- Default content -->
-        <slot>
-          Sources de Confiance
-        </slot>
+      <!-- Default content -->
+      <slot>
+        Sources de Confiance
+      </slot>
 
-        <slot name="count"></slot>
-      </a>
+      <slot name="count"></slot>
     </span>
 
     <span v-else>
       <slot name="logo_inactive">
         <!-- Default inactive logo -->
         <img :src="logo" style="display:inline;" />
-
-        <!-- <span class="HF9Klc iJddsb" style="height:16px;width:16px">
-          <svg focusable="false" viewBox="0 0 24 24">
-            <path d="M16.32 14.88a8.04 8.04 0 1 0-1.44 1.44l5.76 5.76 1.44-1.44-5.76-5.76zm-6.36 1.08c-3.36 0-6-2.64-6-6s2.64-6 6-6 6 2.64 6 6-2.64 6-6 6"></path>
-          </svg>
-        </span> -->
       </slot>
 
       <slot>
-        Sources de Confiance
+        Inactive
       </slot>
 
       <slot name="count"></slot>
@@ -60,11 +44,61 @@ export default {
   data() {
     return {
       isActive: false,
+
+      activeTab: null,
+
+      inactiveTab: null,
     };
   },
 
   mounted: function() {
     console.log('>Tab:mounted');
+
+    // this.activeTab = document.getElementById('hdtb-msb-vis').getElementsByTagName('div')[0];
+
+    // this.inactiveTab = this.activeTab.cloneNode(true);
+
+    // this.inactiveTab.classList.remove("hdtb-msel");
+
+    // var svg = document.createElement("svg");
+    // svg.setAttribute("focusable","false");
+    // svg.setAttribute("viewBox","0 0 24 24");
+    // var path = document.createElement("path");
+    // path.setAttribute("d","M16.32 14.88a8.04 8.04 0 1 0-1.44 1.44l5.76 5.76 1.44-1.44-5.76-5.76zm-6.36 1.08c-3.36 0-6-2.64-6-6s2.64-6 6-6 6 2.64 6 6-2.64 6-6 6");
+    // svg.appendChild(path);
+    // this.inactiveTab.getElementsByTagName("svg")[0].replaceWith(svg);
+
+    // var anchor = document.createElement("a");
+    // anchor.setAttribute("class", "q qs");
+    // var el = this.inactiveTab.firstChild;
+    // while (el) {
+    //   console.log(el);
+    //   anchor.appendChild(el);
+    //   el = el.nextSibling;
+    // }
+    // anchor.textContent = this.inactiveTab.textContent;
+    // for (let item of this.inactiveTab.children) {
+    //   anchor.appendChild(item);
+    // }
+
+    //this.inactiveTab.textContent = null;
+    // this.inactiveTab.appendChild(anchor);
+
+    // this.activeTab.parentNode.insertBefore(this.inactiveTab,this.activeTab.nextSibling);
+
+    /*
+      <div class="hdtb-mitem hdtb-imb">
+        <a class="q qs" href="/search?q=lyon&amp;biw=1111&amp;bih=623&amp;source=lnms&amp;sa=X&amp;ved=0ahUKEwjDhvirj6rrAhUFzhoKHd8sDL0Q_AUIDSgA" data-sc="A">
+          <span class="HF9Klc iJddsb" style="height:16px;width:16px">
+            <svg focusable="false" viewBox="0 0 24 24">
+              <path d="M16.32 14.88a8.04 8.04 0 1 0-1.44 1.44l5.76 5.76 1.44-1.44-5.76-5.76zm-6.36 1.08c-3.36 0-6-2.64-6-6s2.64-6 6-6 6 2.64 6 6-2.64 6-6 6">
+              </path>
+            </svg>
+          </span>
+          Tous
+        </a>
+      </div>
+     */
   },
 
   updated: function() {
@@ -82,6 +116,8 @@ export default {
     activate: function(active) {
       console.log('>activate ' + active);
       this.isActive = active;
+
+      // Set Google's 'All' tab to reflect position
     },
   },
 };
