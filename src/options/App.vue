@@ -6,7 +6,8 @@
       Cette ressource est actualisée en permanence grâce aux contributions de chacun. Comme membre de la communauté de ses utilisateurs, vous pouvez donc vérifier la présence d'un
       site, et éventuellement proposer son ajout aux Sources de confiance.
     </p>
-    <p><a href="https://sources-de-confiance.fr/sources">> Contribuer</a></p>
+    <div class="sdc-flex sdc-m-auto sdc-text-green">Hello</div>
+    <p><a href="https://sources-de-confiance.fr/sources">Contribuer</a></p>
   </div>
 </template>
 

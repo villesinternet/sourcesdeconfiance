@@ -6,7 +6,7 @@
           <img class="sdc-h-6" :src="mainLogo" alt="Logo Sources de Confiance" />
         </div>
 
-        <div class="sdc-px-2 sdc-pb-2 sdc-text-gray-500 sdc-text-s">{{ this.resultsCount }} résultats de confiance sur les {{ this.se.start }} premier résultats</div>
+        <div class="sdc-px-2 sdc-pb-2 sdc-text-gray-500 sdc-text-s">Total de {{ this.resultsCount }} résultats de confiance</div>
 
         <Result v-for="result in currentResults" :key="result.url" :result="result" class="sdc-p-2" />
 
@@ -110,7 +110,7 @@ export default {
     },
 
     allFetched: function() {
-      return this.se.requestsCount >= this.maxRequests;
+      return this.se.requestsCount >= this.$SE.maxRequests;
     },
 
     pageIncomplete: function() {
@@ -199,6 +199,7 @@ export default {
       console.log('>sendRequest');
 
       this.se.currentPage++;
+      this.se.requestsCount++;
 
       // Fill wiht default values
       msg.request = this.queryString;
@@ -297,7 +298,7 @@ export default {
           console.log('clearing polling');
           clearInterval(this.poll); // No more polling
         }.bind(this),
-        100
+        500
       );
 
       console.log('polling interval set to ' + this.$SE.requestsDelay + ' ms.');

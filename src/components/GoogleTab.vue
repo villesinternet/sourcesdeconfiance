@@ -54,51 +54,35 @@ export default {
   mounted: function() {
     console.log('>Tab:mounted');
 
-    // this.activeTab = document.getElementById('hdtb-msb-vis').getElementsByTagName('div')[0];
+    this.activeTab = document
+      .getElementById('hdtb-msb-vis')
+      .getElementsByTagName('div')[0]
+      .cloneNode(true);
 
-    // this.inactiveTab = this.activeTab.cloneNode(true);
+    this.inactiveTab = document.createElement('div');
+    this.inactiveTab.setAttribute('class', 'hdtb-mitem hdtb-imb');
+    var a = document.createElement('a');
+    a.setAttribute('class', 'q qs');
+    a.setAttribute('href', window.location.pathname + window.location.search);
+    a.setAttribute('data-sc', 'A');
+    this.inactiveTab.appendChild(a);
 
-    // this.inactiveTab.classList.remove("hdtb-msel");
+    var span = document.createElement('span');
+    span.setAttribute('class', 'HF9Klc iJddsb');
+    span.setAttribute('style', 'height:16px;width:16px');
+    a.appendChild(span);
 
-    // var svg = document.createElement("svg");
-    // svg.setAttribute("focusable","false");
-    // svg.setAttribute("viewBox","0 0 24 24");
-    // var path = document.createElement("path");
-    // path.setAttribute("d","M16.32 14.88a8.04 8.04 0 1 0-1.44 1.44l5.76 5.76 1.44-1.44-5.76-5.76zm-6.36 1.08c-3.36 0-6-2.64-6-6s2.64-6 6-6 6 2.64 6 6-2.64 6-6 6");
-    // svg.appendChild(path);
-    // this.inactiveTab.getElementsByTagName("svg")[0].replaceWith(svg);
+    var text = document.createTextNode(this.activeTab.textContent);
+    a.appendChild(text);
 
-    // var anchor = document.createElement("a");
-    // anchor.setAttribute("class", "q qs");
-    // var el = this.inactiveTab.firstChild;
-    // while (el) {
-    //   console.log(el);
-    //   anchor.appendChild(el);
-    //   el = el.nextSibling;
-    // }
-    // anchor.textContent = this.inactiveTab.textContent;
-    // for (let item of this.inactiveTab.children) {
-    //   anchor.appendChild(item);
-    // }
+    var svg = document.createElement('svg');
+    svg.setAttribute('focusable', 'false');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    span.appendChild(svg);
 
-    //this.inactiveTab.textContent = null;
-    // this.inactiveTab.appendChild(anchor);
-
-    // this.activeTab.parentNode.insertBefore(this.inactiveTab,this.activeTab.nextSibling);
-
-    /*
-      <div class="hdtb-mitem hdtb-imb">
-        <a class="q qs" href="/search?q=lyon&amp;biw=1111&amp;bih=623&amp;source=lnms&amp;sa=X&amp;ved=0ahUKEwjDhvirj6rrAhUFzhoKHd8sDL0Q_AUIDSgA" data-sc="A">
-          <span class="HF9Klc iJddsb" style="height:16px;width:16px">
-            <svg focusable="false" viewBox="0 0 24 24">
-              <path d="M16.32 14.88a8.04 8.04 0 1 0-1.44 1.44l5.76 5.76 1.44-1.44-5.76-5.76zm-6.36 1.08c-3.36 0-6-2.64-6-6s2.64-6 6-6 6 2.64 6 6-2.64 6-6 6">
-              </path>
-            </svg>
-          </span>
-          Tous
-        </a>
-      </div>
-     */
+    var path = document.createElement('path');
+    path.setAttribute('d', 'M16.32 14.88a8.04 8.04 0 1 0-1.44 1.44l5.76 5.76 1.44-1.44-5.76-5.76zm-6.36 1.08c-3.36 0-6-2.64-6-6s2.64-6 6-6 6 2.64 6 6-2.64 6-6 6');
+    svg.appendChild(path);
   },
 
   updated: function() {
@@ -117,7 +101,13 @@ export default {
       console.log('>activate ' + active);
       this.isActive = active;
 
+      console.log(this.isActive ? this.inactiveTab : this.activeTab);
+
       // Set Google's 'All' tab to reflect position
+      document
+        .getElementById('hdtb-msb-vis')
+        .getElementsByTagName('div')[0]
+        .replaceWith(this.isActive ? this.inactiveTab : this.activeTab);
     },
   },
 };
