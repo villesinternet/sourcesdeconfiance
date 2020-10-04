@@ -12,7 +12,7 @@ function onError(e) {
 //----------------------------
 // Scrap the Search Engine Result Page and send request to the filter module
 function getSerp(storedSettings) {
-  console.log('>getSerp');
+  //console.log('>getSerp');
   if (storedSettings.extensionswitch != 'off') {
     //if extension is switched on, proceed
     // const resultslist = document.getElementsByClassName('g');
@@ -35,7 +35,7 @@ function getSerp(storedSettings) {
     //
     const querystring = document.getElementsByName('q')[0].value;
     const rcs = document.getElementsByClassName('rc');
-    console.log(rcs.length);
+    //console.log(rcs.length);
     var resultjson = [];
     for (var i = 0; i < rcs.length; i++) {
       if (!rcs[i].classList.contains('kno-kp')) {
@@ -45,7 +45,7 @@ function getSerp(storedSettings) {
         });
       }
     }
-    console.log(resultjson);
+    //console.log(resultjson);
 
     var apiserver = 'https://sourcesdeconfiance.org/api/trusted';
     if (storedSettings.apiserver) {
