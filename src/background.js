@@ -85,7 +85,7 @@ function handleMessage(json, sender, sendResponse) {
   switch (json.type) {
     case 'GET_SERP':
     case 'CATEGORIZE':
-      console.log('json.doc=');
+      //console.log('json.doc=');
       //console.log(json.doc);
 
       checkTrusted(json).then(
@@ -100,6 +100,7 @@ function handleMessage(json, sender, sendResponse) {
 
     case 'GET_NEXT_RESULTS':
     case 'FETCH_AND_CATEGORIZE':
+      // Debug only: generate fake results
       if (useFakeResults) {
         console.log('useFakeResults');
 
@@ -112,20 +113,15 @@ function handleMessage(json, sender, sendResponse) {
         return;
       }
 
-      console.log(json);
-      // Use the prodived search link if it is given
-      var searchUrl;
-      if (json.searchLink) {
-        searchUrl = json.searchLink;
-        console.log('use provided search link: ' + json.searchLink);
-      } else {
-        console.log('generating search link: start=' + json.start + ', resultsPerPage=' + json.resultsPerPage.toString());
-        searchUrl = 'https://www.google.fr/search?q=' + json.request + '&start=' + json.start + '&num=' + json.resultsPerPage.toString();
-      }
-      console.log(searchUrl);
+      // Use the provided search link if we have it
+      var searchUrl = json.searchLink;
+      console.assert(searchUrl, 'no search link provided');
+      // console.log('generating search link: start=' + json.start + ', resultsPerPage=' + json.resultsPerPage.toString());
+      // searchUrl = 'https://www.google.fr/search?q=' + json.request + '&start=' + json.start + '&num=' + json.resultsPerPage.toString();
+      console.log('requesting search link: ' + searchUrl);
 
       getHTML(searchUrl, function(response) {
-        parseGoogle(response, json, function(resultsjson) {
+        extractFromSERP(response, json, function(resultsjson) {
           checkTrusted(resultsjson).then(
             function(enrichedjson) {
               //send next trusted results back to the content script
@@ -246,25 +242,20 @@ var getHTML = function(url, callback) {
   xhr.send();
 };
 
-function parseGoogle(doc, json, callback) {
-  var resultslist = doc.getElementsByClassName('g');
-  var querystring = doc.getElementsByName('q')[0].value;
-  var results = [];
-  for (var i = 0; i < resultslist.length; i++) {
-    var el = resultslist[i].getElementsByClassName('rc'); // test if result has expected child. prevents code from breaking when a special info box occurs.
-    if (el.length > 0 && !resultslist[i].classList.contains('kno-kp')) {
-      //quickfix do not analyse knowledge boxes. Could be a specific analysis instead
-      results.push({
-        id: i,
-        url: resultslist[i].querySelector('.rc .r a').href,
-        name: resultslist[i].querySelector('.rc .r h3').innerText,
-        snippet: resultslist[i].querySelector('.rc .s .st').innerText,
-      });
-    }
+function extractFromSERP(doc, json, callback) {
+  console.log('>extractFromSERP');
+
+  switch (json.searchengine) {
+    case 'google':
+      var extractFn = google.extractFromSERP;
+      break;
+
+    default:
+      console.assert(false, '# searchengine not supported', json.searchengine);
   }
-  var resultjson = json;
-  resultjson.results = results;
-  callback(resultjson);
+
+  json.results = extractFn(doc);
+  callback(json);
 }
 
 function checkTrusted(json) {

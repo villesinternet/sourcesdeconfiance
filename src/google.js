@@ -11,15 +11,16 @@ var google = {
 
   getSearchLinks: helpers.getSearchLinks, // Build links table to get additional results
   extractFromSERP: helpers.extractFromSERP, // Extract results from current page
-  injectSDC: helpers.injectSDC, // Inject SDC Frame
+  injectFrame: helpers.injectFrame, // Inject SDC Frame
   injectMenuItem: helpers.injectMenuItem, // Inject SDC Menu item
+  refreshTitle: helpers.refreshTitle, // Refresh tab's title & appearance
   highlight: helpers.highlight, // Highlight results in home page
 
-  menu: {
-    // Menu management variables
-    el: null, // Our item DOM element
-    isActive: false, // Status
-  },
+  // menu: {
+  //   // Menu management variables
+  //   el: null, // Our item DOM element
+  //   isActive: false, // Status
+  // },
 };
 
 // We only need to run SDC on the "All" Google pane (not images, news, etc)

@@ -1,90 +1,201 @@
 import Vue from 'vue';
+import * as helpers from '../helpers/general.js';
 
-//Extract results from the the document's SERP
+// This is our menu control object
+var menu = {
+  el: createTabElement(false), // Create the DOM element
+  isActive: false,
+};
+
+/**
+ * Extract results from the the document's SERP
+ * @param  HTMLDocument doc [description]
+ * @return Array     Extracted result objects array w/
+ *                             id
+ *                             url
+ *                             name (title)
+ *                             snippet (web page exerpt)
+ */
 export function extractFromSERP(doc) {
-  console.log('>extractFromSERP');
+  console.log('>Google.extractFromSERP');
 
-  const elements = doc.getElementsByClassName('g');
   var results = [];
-  for (var i = 0; i < elements.length; i++) {
-    var el = elements[i].getElementsByClassName('rc'); // test if result has expected child. prevents code from breaking when a special info box occurs.
-    if (el.length > 0 && !elements[i].classList.contains('kno-kp')) {
-      //quickfix do not analyse knowledge boxes. Could be a specific analysis instead
-      var url = elements[i].querySelector('.rc a').href;
-      var name = elements[i].querySelector('.rc .r a h3').textContent;
-      var snippet = elements[i].querySelector('.rc .s .st') ? elements[i].querySelector('.rc .s .st').textContent : '';
-      results.push({
-        id: i,
-        url: url,
-        name: name,
-        snippet: snippet,
-      });
-    }
-  }
 
+  const elements = doc.getElementsByClassName('rc');
+  console.assert(elements, 'Could not find rc class elements');
+
+  for (var i = 0; i < elements.length; i++) {
+    var url = elements[i].getElementsByTagName('a')[0];
+    var name = elements[i].getElementsByTagName('h3')[0];
+    var snippet = elements[i].children[1];
+    console.assert(name, 'Could not find the name');
+    console.assert(url, 'Could not find the url');
+    console.assert(snippet, 'Could not find the snippet');
+    results.push({
+      id: i,
+      url: url ? url.href : '',
+      name: name ? name.textContent : '',
+      snippet: snippet ? snippet.textContent : '',
+    });
+  }
   return results;
 }
 
-// Utility function to list the additional search pages we can scrap
+//
+// Utility function to create a list of search urls
+//
+// @return     {Array}  The search urls
+//
 export function getSearchLinks() {
   console.log('>getSearchLinks');
 
-  var links = [window.location.href];
+  // --- Strategy using links at bottom of the current SERP
+  // ------------------------------------------------------
+  //
+  //var links = [window.location.href];
 
   // Read the search pages from the footer
-  var refs = document.getElementById('foot').getElementsByClassName('fl');
-  for (var l = 0; l < refs.length; l++) {
-    links.push(refs[l].href);
+  // var refs = document.getElementById('foot').getElementsByClassName('fl');
+  // for (var l = 0; l < refs.length; l++) {
+  //   links.push(refs[l].href);
+  // }
+
+  // --- Strategy using 100 results max per page
+  // -------------------------------------------
+  //
+  var links = [window.location.href];
+
+  var url = new URL(window.location.href);
+  var firstResultIndex = url.searchParams.get('start');
+  firstResultIndex = firstResultIndex ? parseInt(firstResultIndex) : 0;
+  var currentResultsCount = document.getElementsByClassName('g').length;
+
+  // Create the links for results before the current SERP
+  var index = 0;
+  while (index < firstResultIndex) {
+    var count = Math.min(firstResultIndex, 100);
+    url.searchParams.set('num', count);
+    url.searchParams.set('start', index);
+    links.push(url.toString());
+    index += count;
   }
+
+  // Skip current search link
+  index += currentResultsCount;
+
+  // Create the links for the remaining results
+  while (index < 200) {
+    var count = Math.min(100, 200 - index);
+    url.searchParams.set('num', count);
+    url.searchParams.set('start', index);
+    var searchLink = url.toString();
+    links.push(url.toString());
+    index += count;
+  }
+
+  console.log('returning ' + links.length + ' search links');
+  console.log(links);
   return links;
 }
 
-// Create SDC DOM Element & return it
-export function injectSDC() {
+//
+// Create SDC Frame DOM div & return it
+//
+// @return     div  frameDiv Element
+//
+export function injectFrame() {
   var frameDiv = document.createElement('div');
   document.getElementById('cnt').append(frameDiv);
   return frameDiv;
 }
 
+/**
+ * Html snippet for the tab title
+ *
+ * @param      {string}   title   Tab title
+ * @param      {boolean}  active  active tab or not
+ * @return     {string}   { description_of_the_return_value }
+ */
+function tabHTML(title, active) {
+  var html =
+    '<span class="HF9Klc iJddsb" style="height:16px;width:16px">' + '<img src="' + helpers.asset(active ? 'icons/sdc-12.png' : 'icons/sdc-off-12.png') + '">' + '</span>' + title;
+
+  return html;
+}
+
+/**
+ * Creates the tab element (div)
+ *
+ * @param      boolean active  should the tab be active or not
+ * @return     div  the div DOM element
+ */
+function createTabElement(active) {
+  // Create the menu DOM element
+  var tab = document.createElement('div');
+  tab.setAttribute('class', 'hdtb-mitem hdtb-imb');
+  tab.innerHTML = tabHTML('Sources de Confiance', active);
+
+  return tab;
+}
+
+/**
+ * Shows/Hide the frame.
+ *
+ * @param      boolean  active  Should the fram we active or not
+ */
+function showFrame(active) {
+  // Works by hiding all uneeded frames from the Google interface
+  document.getElementById('appbar').style.display = active ? 'none' : '';
+  document.getElementById('atvcap').style.display = active ? 'none' : '';
+  document.getElementById('rcnt').style.display = active ? 'none' : '';
+  document.getElementById('footcnt').style.display = active ? 'none' : '';
+  document.getElementById('xfootw').style.display = active ? 'none' : '';
+}
+
+/**
+ * refresh Tab title
+ *
+ * @param      string  title   Teh tab title
+ */
+export function refreshTitle(title) {
+  menu.el.innerHTML = tabHTML(title, menu.isActive);
+}
+
 // Create SDC menu item
-export function injectMenuItem(el, signalFrame) {
+// export function injectMenuItem(el, signalFrame) {
+export function injectMenuItem(signalFrame) {
   console.log('>google:injectMenuItem');
-  console.log(signalFrame);
-
-  var menu = Vue.prototype.$SE.menu;
-
-  // Store the menu DOM element
-  menu.el = el;
 
   // Insert in google's menu bar
-  var menuBar = document.getElementById('hdtb-msb-vis');
-  menuBar.insertBefore(menu.el, menuBar.children[1]);
+  var toolbar = document.getElementById('hdtb-msb-vis');
+  toolbar.insertBefore(menu.el, toolbar.children[1]);
 
   // Insert a listener for all google tb items
-  for (let el of document.getElementById('hdtb-msb-vis').getElementsByTagName('div'))
+  for (let el of document.getElementById('hdtb-msb-vis').getElementsByTagName('div')) {
     el.addEventListener('click', function(e) {
-      console.log('>google:toolbar');
       // If we're here, a Google toolbar menut item has been clicked
+      console.log('>google:toolbar');
 
-      // Is this for us?
-      if (menu.el.contains(e.target)) menu.isActive = true;
-      else menu.isActive = false;
+      // Is this SdC toolbar item?
+      menu.isActive = menu.el.contains(e.target);
+      console.log(menu.isActive);
 
-      // Hide or show all elements needef
-      document.getElementById('appbar').style.display = menu.isActive ? 'none' : '';
-      document.getElementById('atvcap').style.display = menu.isActive ? 'none' : '';
-      document.getElementById('rcnt').style.display = menu.isActive ? 'none' : '';
-      document.getElementById('footcnt').style.display = menu.isActive ? 'none' : '';
-      document.getElementById('xfootw').style.display = menu.isActive ? 'none' : '';
+      // Set proper icon for the SdC tab
+      if (menu.isActive) menu.el.getElementsByTagName('img')[0].setAttribute('src', helpers.asset('icons/sdc-12.png'));
+      else menu.el.getElementsByTagName('img')[0].setAttribute('src', helpers.asset('icons/sdc-off-12.png'));
 
       // Update menu bar
-      for (let el of document.getElementById('hdtb-msb-vis').getElementsByTagName('div')) el.classList.remove('hdtb-msel');
-      if (menu.isActive) menu.el.classList.add('hdtb-msel');
-      else e.target.classList.add('hdtb-msel');
+      for (let el of document.getElementById('hdtb-msb-vis').getElementsByTagName('div'))
+        if (el.contains(e.target)) el.classList.add('hdtb-msel');
+        else el.classList.remove('hdtb-msel');
+
+      // Hide or show all elements needed for SdC frame display
+      showFrame(menu.isActive);
 
       // Signal the Frame of the change
       signalFrame(menu.isActive);
     });
+  }
 }
 
 // Highlight results in home page

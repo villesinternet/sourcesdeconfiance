@@ -29,9 +29,7 @@ import * as helpers from './helpers/general.js';
 
 import Result from './components/Result.vue';
 import Pagination from './components/Pagination.vue';
-import GoogleTab from './components/GoogleTab.vue';
 
-//import Pulse from './components/Pulse.vue';
 import Rotate from './components/Rotate.vue';
 
 export default {
@@ -40,8 +38,6 @@ export default {
   components: {
     Pagination,
     Result,
-    GoogleTab,
-    //  Pulse,
     Rotate,
   },
 
@@ -145,38 +141,18 @@ export default {
     prepareUX: function() {
       console.log('>prepareUX');
 
-      // Create menu item
-      var TabClass;
-      switch (this.$SE.name) {
-        case 'google':
-          TabClass = Vue.extend(GoogleTab);
-          break;
-        default:
-          console.log('Error: Search engine not supported: ' + this.$SE.name);
-          return;
-      }
-      console.log('Creating tab component for ' + this.$SE.name);
-      this.tab = new TabClass();
-      this.tab.$parent = this; // There must be something more elegant
-      this.tab.$mount();
-
-      this.$SE.injectMenuItem(this.tab.$el, this.toggle);
+      this.$SE.injectMenuItem(this.toggle);
 
       // Set title
       this.refreshTab();
-
-      // this.tab.$slots.default = this.title;
-      // this.tab.$slots.count = '';
     },
 
     // Refresh tab's title
     refreshTab: function() {
       console.log('>refreshTab');
 
-      this.tab.$slots.default = this.title;
-      this.tab.$slots.count = this.resultsCount ? '(' + this.resultsCount + (this.allFetched ? '' : '+') + ')' : '';
-
-      this.tab.$forceUpdate();
+      var t = this.title + (this.resultsCount ? ' (' + this.resultsCount + (this.allFetched ? '' : '+') + ')' : '');
+      this.$SE.refreshTitle(t);
     },
 
     prepareSearch: function() {
@@ -399,7 +375,7 @@ export default {
       this.isActive = isVisible;
 
       // Signal the Tab SE helper of the change of status
-      this.tab.activate(this.isActive);
+      //this.tab.activate(this.isActive);
     },
 
     // A pagination button has been pressed: see if we need to add results
@@ -425,8 +401,14 @@ export default {
 </script>
 
 <style>
-/*import tailwind from './assets/styles/tailwind.css';*/
 @tailwind base;
+
+/* Restore google settings */
+a {
+  color: #1a0dab;
+  text-decoration: none;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+}
 @tailwind components;
 @tailwind utilities;
 @import './assets/styles/google.css';
