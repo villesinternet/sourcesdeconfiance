@@ -12,25 +12,41 @@ function onError(e) {
 //----------------------------
 // Scrap the Search Engine Result Page and send request to the filter module
 function getSerp(storedSettings) {
+  console.log('>getSerp');
   if (storedSettings.extensionswitch != 'off') {
     //if extension is switched on, proceed
-    const resultslist = document.getElementsByClassName('g');
+    // const resultslist = document.getElementsByClassName('g');
+    // const querystring = document.getElementsByName('q')[0].value;
+    // var resultjson = [];
+    // // fo each result, store id (from array index) and url (from href) in the resultjson array
+    // for (var i = 0; i < resultslist.length; i++) {
+    //   var el = resultslist[i].getElementsByClassName('rc'); // test if result has expected child. prevents code from breaking when a special info box occurs.
+    //   if (el.length > 0 && !resultslist[i].classList.contains('kno-kp')) {
+    //     //quickfix do not analyse knowledge boxes. Could be a specific analysis instead
+    //     resultjson.push({
+    //       id: i,
+    //       url: resultslist[i]
+    //         .querySelector('.rc')
+    //         .querySelector('.r')
+    //         .querySelector('a').href,
+    //     });
+    //   }
+    // }
+    //
     const querystring = document.getElementsByName('q')[0].value;
+    const rcs = document.getElementsByClassName('rc');
+    console.log(rcs.length);
     var resultjson = [];
-    // fo each result, store id (from array index) and url (from href) in the resultjson array
-    for (var i = 0; i < resultslist.length; i++) {
-      var el = resultslist[i].getElementsByClassName('rc'); // test if result has expected child. prevents code from breaking when a special info box occurs.
-      if (el.length > 0 && !resultslist[i].classList.contains('kno-kp')) {
-        //quickfix do not analyse knowledge boxes. Could be a specific analysis instead
+    for (var i = 0; i < rcs.length; i++) {
+      if (!rcs[i].classList.contains('kno-kp')) {
         resultjson.push({
           id: i,
-          url: resultslist[i]
-            .querySelector('.rc')
-            .querySelector('.r')
-            .querySelector('a').href,
+          url: rcs[i].getElementsByTagName('a')[0].href,
         });
       }
     }
+    console.log(resultjson);
+
     var apiserver = 'https://sourcesdeconfiance.org/api/trusted';
     if (storedSettings.apiserver) {
       apiserver = storedSettings.apiserver;
@@ -61,6 +77,7 @@ browser.runtime.onMessage.addListener(handleMessage);
 // Parse API response and apply new style and position to trusted results
 
 function highlight(enrichedjson) {
+  console.log('>highlight');
   const resultslist = document.getElementsByClassName('g');
   //check if it is the first result page, to apply specific style to the first result entry
   if (window.location.href.indexOf('&start=0') != -1) {
