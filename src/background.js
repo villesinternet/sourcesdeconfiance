@@ -8,7 +8,7 @@ var defaultsettings = {
   apiserver: 'https://sourcesdeconfiance.org/api/trusted',
 };
 
-const extensionversion = '1.0.9';
+const extensionversion = '1.0.10';
 
 function checkAPI() {
   var start_time = new Date().getTime();
