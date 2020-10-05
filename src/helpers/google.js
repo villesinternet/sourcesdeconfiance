@@ -17,8 +17,6 @@ var menu = {
  *                             snippet (web page exerpt)
  */
 export function extractFromSERP(doc) {
-  console.log('>Google.extractFromSERP');
-
   var results = [];
 
   const elements = doc.getElementsByClassName('rc');
@@ -39,6 +37,16 @@ export function extractFromSERP(doc) {
     });
   }
   return results;
+}
+
+//
+// Gets the query string from the current page
+//
+// @return     {<type>}  The query string.
+//
+export function getQueryString() {
+  console.log('>getQueryString: ' + document.getElementsByName('q')[0].value);
+  return document.getElementsByName('q')[0].value;
 }
 
 //
@@ -93,8 +101,6 @@ export function getSearchLinks() {
     index += count;
   }
 
-  console.log('returning ' + links.length + ' search links');
-  console.log(links);
   return links;
 }
 
@@ -178,7 +184,6 @@ export function injectMenuItem(signalFrame) {
 
       // Is this SdC toolbar item?
       menu.isActive = menu.el.contains(e.target);
-      console.log(menu.isActive);
 
       // Set proper icon for the SdC tab
       if (menu.isActive) menu.el.getElementsByTagName('img')[0].setAttribute('src', helpers.asset('icons/sdc-12.png'));

@@ -1,7 +1,7 @@
 <template>
   <!-- <div class="sdc-bg-white sdc-px-4 sdc-py-3 sdc-flex sdc-items-center sdc-justify-between sdc-border-t sdc-border-gray-200 sm:sdc-px-6"> -->
-  <div class="sdc-p-2">
-    <div class="sdc-flex-1 sdc-flex sdc-justify-between sm:sdc-hidden">
+  <div class="">
+    <!-- <div class="sdc-flex-1 sdc-flex sdc-justify-between sm:sdc-hidden">
       <a
         href="#"
         class="sdc-relative sdc-inline-flex sdc-items-center sdc-px-4 sdc-py-2 sdc-border sdc-border-gray-300 sdc-text-sm sdc-leading-5 sdc-font-medium sdc-rounded-md sdc-text-gray-700 sdc-bg-white hover:sdc-text-gray-500 focus:sdc-outline-none focus:sdc-shadow-outline-blue focus:sdc-border-blue-300 active:sdc-bg-gray-100 active:sdc-text-gray-700 sdc-transition sdc-ease-in-out sdc-duration-150"
@@ -14,7 +14,7 @@
       >
         Suivant
       </a>
-    </div>
+    </div> -->
     <div class="sdc-hidden sm:sdc-flex-1 sm:sdc-flex sm:sdc-items-center sm:sdc-justify-between">
       <div>
         <p class="sdc-text-sm sdc-leading-5 sdc-text-gray-700">
@@ -65,8 +65,8 @@
             {{ i }}
           </a>
 
-          <a
-            v-if="nextButton"
+          <!-- <a
+            v-show="nextButton"
             ref="sdcPageNext"
             href="#"
             class="-sdc-ml-px sdc-relative sdc-inline-flex sdc-items-center sdc-px-2 sdc-py-2 
@@ -86,7 +86,7 @@
                 clip-rule="evenodd"
               />
             </svg>
-          </a>
+          </a> -->
         </nav>
       </div>
     </div>
@@ -106,11 +106,6 @@ export default {
     itemsPerPage: {
       type: Number,
       required: true,
-    },
-
-    nextButton: {
-      type: Boolean,
-      default: false,
     },
   },
 
@@ -134,26 +129,11 @@ export default {
 
   methods: {
     updatePage: function(pageNumber) {
-      var select;
-
-      switch (pageNumber) {
-        case 'prev':
-          this.currentPage = this.currentPage > 1 ? this.currentPage - 1 : this.currentPage;
-          select = 'prev';
-          break;
-
-        case 'next':
-          this.currentPage = this.currentPage < this.countPages ? this.currentPage + 1 : this.countPages;
-          select = 'next';
-          break;
-
-        default:
-          select = this.currentPage = pageNumber;
-      }
+      this.currentPage = pageNumber;
 
       this.focusPageSelector();
 
-      this.$emit('pageselect', select);
+      this.$emit('pageselect', this.currentPage);
     },
 
     focusPageSelector: function() {

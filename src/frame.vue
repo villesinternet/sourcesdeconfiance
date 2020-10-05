@@ -1,22 +1,29 @@
 <template>
-  <div id="app">
-    <div v-show="isActive" class="sdc-container sdc-mx-40 sdc-pb-4 sdc-max-w-3xl">
-      <div class="sdc-mt-4 sdc-border sdc-border-gray-400 sdc-rounded">
-        <div class="sdc-p-2">
+  <div id="app flex">
+    <div v-show="isActive" class="sdc-container sdc-mx-40 sdc-max-w-4xl">
+      <div class="sdc-mt-4 sdc-border sdc-border-green-400 sdc-rounded sdc-p-4">
+        <!-- <div class="sdc-p-2">
           <img class="sdc-h-6" :src="mainLogo" alt="Logo Sources de Confiance" />
-        </div>
+        </div> -->
+        <NavBar :logo="mainLogo" :tabs="tabs" v-on:select="selectTab($event)" />
 
-        <div class="sdc-px-2 sdc-pb-2 sdc-text-gray-500 sdc-text-s">Total de {{ this.resultsCount }} résultats de confiance</div>
+        <div v-if="tabs['web'].status == 'active'" class="sdc-mt-3">
+          <div class="sdc-pb-4 sdc-text-gray-500 sdc-text-s">{{ this.resultsCount }} résultats de confiance</div>
 
-        <Result v-for="result in currentResults" :key="result.url" :result="result" class="sdc-p-2" />
+          <Result v-for="result in currentResults" :key="result.url" :result="result" class="sdc-pb-3" />
 
-        <div v-if="waitingFoResults" class="sdc-flex">
-          <div class="sdc-m-auto">
+          <div v-if="waitingFoResults" class="sdc-flex sdc-m-auto sdc-justify-center">
             <Rotate />
           </div>
+
+          <Pagination v-show="results.length" v-model="currentPage" :countItems="results.length" :itemsPerPage="10" @pageselect="pageSelect" />
         </div>
 
-        <Pagination v-show="results.length" v-model="currentPage" :countItems="results.length" :itemsPerPage="10" @pageselect="pageSelect" :nextButton="!allFetched" />
+        <div v-if="tabs['legal'].status == 'active'" class="sdc-mt-3">
+          <Legal />
+        </div>
+
+        <div v-if="tabs['delibs'].status == 'active'" class="sdc-mt-3"></div>
       </div>
     </div>
   </div>
@@ -28,7 +35,10 @@ import Vue from 'vue';
 import * as helpers from './helpers/general.js';
 
 import Result from './components/Result.vue';
+import NavBar from './components/NavBar.vue';
 import Pagination from './components/Pagination.vue';
+
+import Legal from './components/Legal.vue';
 
 import Rotate from './components/Rotate.vue';
 
@@ -36,6 +46,8 @@ export default {
   name: 'SdC',
 
   components: {
+    Legal,
+    NavBar,
     Pagination,
     Result,
     Rotate,
@@ -48,14 +60,11 @@ export default {
       default: 10,
     },
 
-    // Poll frequency
-    pollInterval: 1500,
-
     // Nb of results per search engine request
-    resultsPerSERequest: {
-      type: Number,
-      default: 10,
-    },
+    // resultsPerSERequest: {
+    //   type: Number,
+    //   default: 10,
+    // },
   },
 
   data() {
@@ -76,12 +85,12 @@ export default {
       // Search engine related data
       se: {
         requestsCount: 0, // Count the number of search requests (should be < maxRequests)
-
+        maxRequests: 0,
         start: 0, // results offset
-        resultsPerPage: 10, // Number of items returned per request
+        //resultsPerPage: 10, // Number of items returned per request
         currentPage: 0, // Current Search engine page
-        initialPage: 1, // The SERP page index
-        additionalSearchLinks: [], // Links to the additional search pages
+        //initialPage: 1, // The SERP page index
+        //additionalSearchLinks: [], // Links to the additional search pages
       },
 
       poll: null,
@@ -91,6 +100,12 @@ export default {
       pendingRequest: false, // there is an ongoing SE request
 
       freshStart: true,
+
+      tabs: {
+        web: { title: 'Web', status: 'active' },
+        legal: { title: 'Lois', status: 'inactive' },
+        delibs: { title: 'Délibérations', status: 'disabled' },
+      },
     };
   },
 
@@ -106,7 +121,9 @@ export default {
     },
 
     allFetched: function() {
-      return this.se.requestsCount >= this.$SE.maxRequests;
+      console.log('allFetched:');
+      console.log(this.se);
+      return this.se.requestsCount >= this.se.maxRequests;
     },
 
     pageIncomplete: function() {
@@ -138,6 +155,12 @@ export default {
   },
 
   methods: {
+    selectTab: function(tabId) {
+      console.log('>selectTab: tabId= ' + tabId);
+      for (const prop in this.tabs) if (this.tabs[prop].status != 'disabled') this.tabs[prop].status = 'inactive';
+      this.tabs[tabId].status = 'active';
+    },
+
     prepareUX: function() {
       console.log('>prepareUX');
 
@@ -159,11 +182,11 @@ export default {
       console.log('>prepareSearch');
 
       // The current query string
-      this.queryString = document.getElementsByName('q')[0].value;
+      this.queryString = this.$SE.getQueryString();
 
       // Get all possible search links for this query
       this.searchLinks = this.$SE.getSearchLinks();
-      this.maxRequests = this.searchLinks.length;
+      this.se.maxRequests = this.searchLinks.length;
       console.log('maximum number of searches=' + this.maxRequests);
 
       // Handler for all messages coming from background.js (and the others)
@@ -172,7 +195,7 @@ export default {
     },
 
     sendRequest: function(msg) {
-      console.log('>sendRequest');
+      console.log('>sendRequest: msg.type=' + msg.type);
 
       this.se.currentPage++;
       this.se.requestsCount++;
@@ -183,7 +206,6 @@ export default {
       msg.searchengine = this.$SE.name;
 
       // Send msg
-      console.log('msg.type=' + msg.type);
       browser.runtime.sendMessage(msg);
     },
 
@@ -200,6 +222,8 @@ export default {
         type: 'CATEGORIZE',
       };
       this.sendRequest(request);
+
+      console.log('<firstResults');
     },
 
     nextResults: function() {
@@ -230,17 +254,15 @@ export default {
       // We're entering a polling loop to send SE requests at an acceptable pace
       this.poll = setInterval(
         function() {
-          //console.log('>polling');
-
           // Is there a pending request? Let's wait for it to complete
           if (this.pendingRequest) {
-            console.log('request pending');
+            console.log('request already pending. exiting');
             return;
           }
 
           // We have reached the maximum number of SE requests for now
           if (this.allFetched) {
-            console.log('Max request count reach (' + this.maxRequests + ')');
+            console.log('Max request count reach (' + this.se.maxRequests + ')');
             clearInterval(this.poll); // No more interval
             return;
           }
@@ -262,7 +284,8 @@ export default {
           // -- Second case
           // We already have some results, but not enough to fill
           // the current page
-          if (this.pageIncomplete) {
+          if (this.pageIncomplete && !this.allFetched) {
+            console.log('need more results. setting a timeout of ' + this.$SE.requestsDelay + ' until next SE request');
             this.pendingRequest = true;
 
             setTimeout(this.nextResults, this.$SE.requestsDelay);
@@ -274,7 +297,7 @@ export default {
           console.log('clearing polling');
           clearInterval(this.poll); // No more polling
         }.bind(this),
-        500
+        100
       );
 
       console.log('polling interval set to ' + this.$SE.requestsDelay + ' ms.');
@@ -307,7 +330,7 @@ export default {
           this.highlight(request.json);
 
           // And set the number of results per request we want to use from now on
-          this.se.resultsPerPage = this.resultsPerSERequest;
+          //this.se.resultsPerPage = this.resultsPerSERequest;
 
           break;
 
@@ -384,7 +407,7 @@ export default {
 
       switch (select) {
         case 'next':
-          if (!this.pendingRequest && !this.allFetched) this.currentPage++;
+          if (!(this.pendingRequest || this.allFetched)) this.currentPage++;
           break;
         case 'prev':
           if (this.currentPage > 1) this.currentPage--;

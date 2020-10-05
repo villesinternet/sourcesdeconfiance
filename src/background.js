@@ -1,32 +1,43 @@
+import * as config from './config/config.js';
+import * as google from './config/google.js';
+
 import * as FakeResults from './background/fakeResults.js';
-import * as google from './helpers/google.js';
 
-const extensionversion = '1.1';
-
-const useFakeResults = false; // Set to true to generate our own results rather than asking the SE
-
-// DEFAULT SETTINGS
-// If there is nothing in storage, use these values.
-//-------------------------
-var defaultsettings = {
-  extensionswitch: 'on',
-  apiserver: 'https://sourcesdeconfiance.org/api/trusted',
-};
-
-console.log('Sources de confiance v' + extensionversion);
+console.log('Sources de confiance v' + config.extensionversion);
 
 var browser = require('webextension-polyfill');
 
 browser.storage.local.get().then(checkStoredSettings, function(e) {
   console.error(`Error fetching config: ${e}`);
 });
+
 browser.runtime.onMessage.addListener(handleMessage);
+
+var $SE = null; // Search Engine configuration & helpers
+
+//
+// Gets the se configuration.
+//
+// @param      string  se  The searchengine name
+// @return     object  The se configuration object
+//
+function getSEConfig(se) {
+  console.log('>getSEConfig');
+  switch (se) {
+    case 'google':
+      return google.getConfig();
+      break;
+
+    default:
+      console.assert(false, '# searchengine not supported', searchengine);
+  }
+}
 
 function checkAPI() {
   console.log('>checkAPI');
 
   var start_time = new Date().getTime();
-  var dailyhello = { version: extensionversion, userAgent: window.navigator.userAgent };
+  var dailyhello = { version: config.extensionversion, userAgent: window.navigator.userAgent };
   var url = 'https://sourcesdeconfiance.org/api/version';
   let xhr = new XMLHttpRequest();
   xhr.open('GET', url, true);
@@ -51,10 +62,10 @@ function checkStoredSettings(storedsettings) {
   // COULD BE FACTORIZED
   var today = new Date();
   if (!storedsettings.extensionswitch) {
-    defaultsettings.lastcheck = today;
+    config.defaultsettings.lastcheck = today;
     checkAPI();
     browser.browserAction.setIcon({ path: '../assets/icons/sdc-48.png' });
-    browser.storage.local.set(defaultsettings);
+    browser.storage.local.set(config.defaultsettings);
   } else {
     if (storedsettings.extensionswitch == 'off') {
       browser.browserAction.setIcon({ path: '../assets/icons/sdc-off-48.png' });
@@ -76,18 +87,21 @@ function checkStoredSettings(storedsettings) {
   }
 }
 
-// FILTER MODULE
-// Get message from inject.js and send back the enrichedjson response
-//------------------------------
+//
+// Receving messages from the content scripts
+//
+// @param      {<type>}  json          The json
+// @param      {<type>}  sender        The sender
+// @param      {<type>}  sendResponse  The send response
+//
 function handleMessage(json, sender, sendResponse) {
-  console.log('>handleMessage: json.type=' + json.type);
+  console.log('>handleMessage:');
+
+  // Get the search engine configuration
+  $SE = getSEConfig(json.searchengine);
 
   switch (json.type) {
-    case 'GET_SERP':
     case 'CATEGORIZE':
-      //console.log('json.doc=');
-      //console.log(json.doc);
-
       checkTrusted(json).then(
         function(enrichedjson) {
           browser.tabs.sendMessage(sender.tab.id, { json: enrichedjson, message: 'HIGHLIGHT' });
@@ -98,10 +112,9 @@ function handleMessage(json, sender, sendResponse) {
       );
       break;
 
-    case 'GET_NEXT_RESULTS':
     case 'FETCH_AND_CATEGORIZE':
       // Debug only: generate fake results
-      if (useFakeResults) {
+      if (config.useFakeResults) {
         console.log('useFakeResults');
 
         var results = new FakeResults.get(Math.floor(Math.random() * 10));
@@ -245,16 +258,7 @@ var getHTML = function(url, callback) {
 function extractFromSERP(doc, json, callback) {
   console.log('>extractFromSERP');
 
-  switch (json.searchengine) {
-    case 'google':
-      var extractFn = google.extractFromSERP;
-      break;
-
-    default:
-      console.assert(false, '# searchengine not supported', json.searchengine);
-  }
-
-  json.results = extractFn(doc);
+  json.results = $SE.extractFromSERP(doc);
   callback(json);
 }
 
@@ -268,7 +272,7 @@ function checkTrusted(json) {
       delete json.apiserver;
       delete json.type;
     }
-    json.version = extensionversion;
+    json.version = config.extensionversion;
     let xhr = new XMLHttpRequest();
     xhr.open('POST', url, true);
     xhr.setRequestHeader('Content-Type', 'data/json');
