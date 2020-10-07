@@ -38,7 +38,7 @@ function getSerp(storedSettings) {
     //console.log(rcs.length);
     var resultjson = [];
     for (var i = 0; i < rcs.length; i++) {
-      if (!rcs[i].classList.contains('kno-kp')) {
+      if (!rcs[i].classList.contains('kno-kp') && !rcs[i].classList.contains('kp-blk')) {
         resultjson.push({
           id: i,
           url: rcs[i].getElementsByTagName('a')[0].href,
@@ -78,7 +78,8 @@ browser.runtime.onMessage.addListener(handleMessage);
 
 function highlight(enrichedjson) {
   console.log('>highlight');
-  const resultslist = document.getElementsByClassName('g');
+  //const resultslist = document.getElementsByClassName('g');
+  const resultslist = document.getElementsByClassName('rc');
   //check if it is the first result page, to apply specific style to the first result entry
   if (window.location.href.indexOf('&start=0') != -1) {
     firstresult = true;
