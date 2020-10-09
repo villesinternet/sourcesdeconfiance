@@ -1,14 +1,17 @@
 <template>
   <div v-show="isActive">
+    {{ isCantine }}
     <div v-if="service == 'web'">
       <WebFilters />
       <div class="sdc-pb-4 sdc-text-gray-500 sdc-text-s">{{ resultsCount }} résultats de confiance</div>
     </div>
 
     <div class="sdc-flex">
-      <Result v-for="result in currentResults" :key="result.url" :result="result" class="sdc-pb-3" />
+      <div class="sdc-pr-4">
+        <Result v-for="result in currentResults" :key="result.url" :result="result" class="sdc-pb-3" />
+      </div>
       <div v-if="isCantine">
-        Cantine
+        <img class="sc-w-2/5" :src="cantineImg" />
       </div>
     </div>
 
@@ -22,6 +25,7 @@
 
 <script>
 import * as comms from '../helpers/comms.js';
+import * as helpers from '../helpers/general.js';
 
 import Result from './Result.vue';
 import Pagination from './Pagination.vue';
@@ -87,7 +91,11 @@ export default {
 
   computed: {
     isCantine: function() {
-      return this.$SE.getSearchWords() == 'cantine';
+      return this.$SE.getSearchWords() == 'cantine paris 13';
+    },
+
+    cantineImg: function() {
+      return helpers.asset('img/CaisseEcoles13eme.jpg');
     },
 
     isActive: function() {
