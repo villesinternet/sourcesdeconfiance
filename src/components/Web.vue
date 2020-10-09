@@ -1,6 +1,5 @@
 <template>
   <div v-show="isActive">
-    {{ isCantine }}
     <div v-if="service == 'web'">
       <WebFilters />
       <div class="sdc-pb-4 sdc-text-gray-500 sdc-text-s">{{ resultsCount }} résultats de confiance</div>

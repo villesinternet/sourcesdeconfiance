@@ -9,30 +9,28 @@
           <li v-for="(tab, key) in tabs" :class="tab.status ? 'sdc--mb-px' : ''" class="sdc-mr-1">
             <button :id="key" v-bind:disabled="isDisabled(tab)" :class="tabClass(tab.status)" v-on:click="$emit('select', key)">{{ tab.title }}</button>
           </li>
-          <!-- <li class="sdc--mb-px sdc-mr-1">
-            <a :class="activeClass" href="#">Web</a>
-          </li>
-          <li class="sdc-mr-1">
-            <a :class="inactiveClass" href="#">Tab</a>
-          </li>
-          <li class="sdc-mr-1">
-            <a :class="inactiveClass" href="#">Tabs</a>
-          </li>
-          <li class="sdc-mr-1">
-            <a :class="disabledClass" href="#">Tab</a>
-          </li> -->
         </ul>
       </div>
     </div>
     <div>
-      Login
+      <button class="sdc-bg-transparent sdc-text-blue-700 hover:sdc-text-blue-800" @click="openLogin">
+        Connexion
+      </button>
     </div>
+
+    <Login :active="isLogingIn" @loggedin="loggedIn" />
   </div>
 </template>
 
 <script>
+import Login from './Login.vue';
+
 export default {
   name: 'NavBar',
+
+  components: {
+    Login,
+  },
 
   props: {
     logo: {
@@ -44,6 +42,12 @@ export default {
       type: Object,
       required: true,
     },
+  },
+
+  data() {
+    return {
+      isLogingIn: false,
+    };
   },
 
   computed: {
@@ -65,6 +69,17 @@ export default {
   },
 
   methods: {
+    openLogin: function() {
+      console.log('>NavBar:openLogin');
+      this.isLogingIn = true;
+    },
+
+    loggedIn: function() {
+      console.log('>NavBar:loggedin');
+      this.isLogingIn = false;
+      this.$emit('loggedin');
+    },
+
     isDisabled: function(tab) {
       return tab.status == 'disabled';
     },
