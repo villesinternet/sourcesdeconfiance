@@ -2,10 +2,10 @@
   <div id="app flex">
     <div v-show="isActive" class="sdc-container sdc-mx-40 sdc-max-w-4xl">
       <div class="sdc-mt-4 sdc-border sdc-border-green-400 sdc-rounded sdc-p-4">
-        <NavBar :logo="mainLogo" :tabs="tabs" v-on:select="selectTab($event)" />
+        <NavBar :logo="mainLogo" :tabs="tabs" v-on:select="selectTab($event)" @loggedin="hasLoggedIn" />
 
         <div class="sdc-mt-3">
-          <Web service="web" :se="$SE" :visible="isActive" :status="tabs['web'].status" :useSERP="true" @trustedresults="trustedResults" />
+          <Web service="web" :se="$SE" :visible="isActive" :status="tabs['web'].status" :useSERP="true" :loggedIn="loggedIn" @trustedresults="trustedResults" />
         </div>
 
         <div class="sdc-mt-3">
@@ -100,6 +100,8 @@ export default {
         legal: { title: 'Lois', status: 'inactive' },
         delibs: { title: 'Délibérations', status: 'disabled' },
       },
+
+      loggedIn: false,
     };
   },
 
@@ -143,6 +145,11 @@ export default {
   },
 
   methods: {
+    hasLoggedIn: function() {
+      console.log('>loggedIn');
+      this.loggedIn = true;
+    },
+
     // Called from $SE.injectMenuItem activation / deactivation
     toggle: function(isVisible) {
       console.log('>frame:toggle');

@@ -13,16 +13,23 @@
       </div>
     </div>
     <div>
-      <button class="sdc-bg-transparent sdc-text-blue-700 hover:sdc-text-blue-800" @click="openLogin">
+      <button v-if="!loggedIn" class="sdc-bg-transparent sdc-text-blue-700 hover:sdc-text-blue-800" @click="openLogin">
         Connexion
+      </button>
+      <button v-if="loggedIn" class="sdc-bg-transparent sdc-text-blue-700 hover:sdc-text-blue-800">
+        Bienvenue JM Ledru
+
+        <img class="sdc-w-12" :src="parisImg()" />
       </button>
     </div>
 
-    <Login :active="isLogingIn" @loggedin="loggedIn" />
+    <Login :active="isLogingIn" @loggedin="hasLoggedIn" />
   </div>
 </template>
 
 <script>
+import * as helpers from '../helpers/general.js';
+
 import Login from './Login.vue';
 
 export default {
@@ -47,6 +54,7 @@ export default {
   data() {
     return {
       isLogingIn: false,
+      loggedIn: false,
     };
   },
 
@@ -74,8 +82,9 @@ export default {
       this.isLogingIn = true;
     },
 
-    loggedIn: function() {
+    hasLoggedIn: function() {
       console.log('>NavBar:loggedin');
+      this.loggedIn = true;
       this.isLogingIn = false;
       this.$emit('loggedin');
     },
@@ -93,6 +102,10 @@ export default {
         case 'disabled':
           return this.disabledClass;
       }
+    },
+
+    parisImg: function() {
+      return helpers.asset('img/paris.png');
     },
   },
 };

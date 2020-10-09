@@ -1,7 +1,7 @@
 <template>
   <div v-show="isActive">
     <div v-if="service == 'web'">
-      <WebFilters />
+      <WebFilters v-if="loggedIn" />
       <div class="sdc-pb-4 sdc-text-gray-500 sdc-text-s">{{ resultsCount }} résultats de confiance</div>
     </div>
 
@@ -70,6 +70,11 @@ export default {
     service: {
       type: String,
       required: true,
+    },
+
+    loggedIn: {
+      type: Boolean,
+      default: false,
     },
   },
 

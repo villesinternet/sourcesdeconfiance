@@ -22,6 +22,7 @@
           id="email"
           type="text"
           placeholder="votre adresse mail"
+          value="jm-ledru@paris.fr"
         />
       </div>
 
@@ -32,18 +33,16 @@
           id="password"
           type="password"
           placeholder="mote de passe"
+          value="********"
         />
       </div>
       <div>
         <div class="sdc-flex sdc-items-center sdc-justify-between">
-          <button class="sdc-bg-transparent hover:sdc-bg-teal sdc-text-teal-dark hover:sdc-text-white sdc-py-2 sdc-px-4 mr-2" @click="close">
+          <button class="sdc-bg-transparent sdc-text-teal-dark hover:sdc-text-semi-bold sdc-py-2 sdc-px-4 sdc-mr-2" @click="close">
             Annuler
           </button>
 
-          <button
-            class="sdc-bg-transparent hover:sdc-bg-teal sdc-text-teal-dark sdc-font-semibold hover:sdc-text-white sdc-py-2 sdc-px-4 sdc-border sdc-border-teal hover:sdc-border-transparent sdc-rounded mr-2"
-            @click="close"
-          >
+          <button class="sdc-bg-green-600 hover:sdc-bg-teal sdc-text-white hover:sdc-font-semibold sdc-py-2 sdc-px-4 sdc-border  sdc-rounded mr-2" @click="close">
             Connexion
           </button>
         </div>
