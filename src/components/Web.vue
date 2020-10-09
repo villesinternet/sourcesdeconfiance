@@ -5,7 +5,12 @@
       <div class="sdc-pb-4 sdc-text-gray-500 sdc-text-s">{{ resultsCount }} résultats de confiance</div>
     </div>
 
-    <Result v-for="result in currentResults" :key="result.url" :result="result" class="sdc-pb-3" />
+    <div class="sdc-flex">
+      <Result v-for="result in currentResults" :key="result.url" :result="result" class="sdc-pb-3" />
+      <div v-if="isCantine">
+        Cantine
+      </div>
+    </div>
 
     <div v-if="waitingFoResults" class="sdc-flex sdc-m-auto sdc-justify-center">
       <Rotate />
@@ -81,6 +86,10 @@ export default {
   },
 
   computed: {
+    isCantine: function() {
+      return this.$SE.getSearchWords() == 'cantine';
+    },
+
     isActive: function() {
       return this.status == 'active';
     },
