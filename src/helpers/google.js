@@ -44,13 +44,17 @@ export function extractFromSERP(doc) {
 //
 // @return     {<type>}  The query string.
 //
-export function getQueryString() {
-  console.log('>getQueryString: ' + document.getElementsByName('q')[0].value);
+export function getSearchWords() {
+  console.log('>getSearchWords: ' + document.getElementsByName('q')[0].value);
   return document.getElementsByName('q')[0].value;
 }
 
+export function buildSearchUrl(searchWords) {
+  return encodeURI('https://www.google.fr/search?' + 'q=' + searchWords);
+}
+
 //
-// Utility function to create a list of search urls
+// Build links table based on the current query
 //
 // @return     {Array}  The search urls
 //
@@ -68,15 +72,21 @@ export function getSearchLinks() {
   //   links.push(refs[l].href);
   // }
 
-  // --- Strategy using 100 results max per page
+  // --- Strategy generating links
   // -------------------------------------------
   //
-  var links = [window.location.href];
+  //
+  // Add current link
+  // var links = [window.location.href];
+  var links = [];
 
   var url = new URL(window.location.href);
+
   var firstResultIndex = url.searchParams.get('start');
   firstResultIndex = firstResultIndex ? parseInt(firstResultIndex) : 0;
-  var currentResultsCount = document.getElementsByClassName('g').length;
+  var currentResultsCount = document.getElementsByClassName('rc').length + document.getElementsByClassName('kp-wholepage').length;
+
+  url.searchParams.set('q', getSearchWords());
 
   // Create the links for results before the current SERP
   var index = 0;
@@ -104,8 +114,25 @@ export function getSearchLinks() {
   return links;
 }
 
+/**
+ * Create a search url list for a given query
+ *
+ * @param      {string}  searchWords  The search words
+ * @return     {Array}   List of search links
+ */
+export function createSearchLinks(searchWords) {
+  var links = [];
+
+  var index = 0;
+  while (index < 200) {
+    links.push('https://www.google.fr/search?' + 'q=' + searchWords + '&start=' + index + '&num=' + 100);
+    index += Math.min(100, 200 - index);
+  }
+  return links;
+}
+
 //
-// Create SDC Frame DOM div & return it
+// Create SDC panel DOM div & return it
 //
 // @return     div  frameDiv Element
 //

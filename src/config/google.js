@@ -6,8 +6,11 @@ const config = {
   maxResultsPerRequest: 100,
   requestsDelay: 1500,
 
-  getQueryString: helpers.getQueryString, // Get the query string
-  getSearchLinks: helpers.getSearchLinks, // Build links table to get additional results
+  getSearchWords: helpers.getSearchWords,
+  buildSearchUrl: helpers.buildSearchUrl, // Build query string from search words
+  getSearchLinks: helpers.getSearchLinks, // Build links table based on the current query
+  createSearchLinks: helpers.createSearchLinks, // Create links with given searchwords
+  getSearchWords: helpers.getSearchWords, // return search words for the current SERP
   extractFromSERP: helpers.extractFromSERP, // Extract results from current page
   injectFrame: helpers.injectFrame, // Inject SDC Frame
   injectMenuItem: helpers.injectMenuItem, // Inject SDC Menu item
