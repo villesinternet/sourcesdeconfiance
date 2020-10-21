@@ -13,7 +13,8 @@ export function register(service, callback) {
 
 export function toBackground(service, payload) {
   console.log('>toBackground: service=' + service);
-  browser.runtime.sendMessage({
+
+  return browser.runtime.sendMessage({
     service: service,
     payload: payload,
   });
@@ -24,3 +25,18 @@ function fromBackground(msg) {
 
   if (msg.service && msg.service in services) services[msg.service].callback(msg.payload);
 }
+
+// export function toPromisedBackground(service, payload) {
+//   console.log('>toPromisedBackground: service=' + service);
+
+//   return browser.runtime.sendMessage({
+//     service: service,
+//     payload: payload,
+//   });
+// }
+
+// function fromPromisedBackground(msg) {
+//   console.log('>comms:fromBackground service=' + msg.service);
+
+//   if (msg.service && msg.service in services) services[msg.service].callback(msg.payload);
+// }

@@ -32,7 +32,7 @@ import Rotate from './Rotate.vue';
 import WebFilters from './WebFilters';
 
 export default {
-  name: 'Web',
+  name: 'Confiance',
 
   components: {
     Pagination,

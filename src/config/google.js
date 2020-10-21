@@ -12,7 +12,8 @@ const config = {
   createSearchLinks: helpers.createSearchLinks, // Create links with given searchwords
   getSearchWords: helpers.getSearchWords, // return search words for the current SERP
   extractFromSERP: helpers.extractFromSERP, // Extract results from current page
-  injectFrame: helpers.injectFrame, // Inject SDC Frame
+
+  createPanelFrame: helpers.createPanelFrame, // Inject SDC Frame
   injectMenuItem: helpers.injectMenuItem, // Inject SDC Menu item
   refreshTitle: helpers.refreshTitle, // Refresh tab's title & appearance
   highlight: helpers.highlight, // Highlight results in home page

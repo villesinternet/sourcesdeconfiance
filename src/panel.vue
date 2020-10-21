@@ -4,15 +4,18 @@
       <div class="sdc-mt-4 sdc-border sdc-border-green-400 sdc-rounded sdc-p-4">
         <NavBar :logo="mainLogo" :tabs="tabs" v-on:select="selectTab($event)" @loggedin="hasLoggedIn" />
 
-        <div class="sdc-mt-3">
-          <Web service="web" :se="$SE" :visible="isActive" :status="tabs['web'].status" :useSERP="true" :loggedIn="loggedIn" @trustedresults="trustedResults" />
+        <div v-if="activeTab" class="sdc-mt-3">
+          <component
+            v-bind:is="activeTab.component"
+            service="web"
+            :se="$SE"
+            :visible="isActive"
+            :status="activeTab.status"
+            :useSERP="true"
+            :loggedIn="loggedIn"
+            @trustedresults="trustedResults"
+          ></component>
         </div>
-
-        <div class="sdc-mt-3">
-          <Legal :visible="isActive" :status="tabs['legal'].status" />
-        </div>
-
-        <div :status="tabs['delibs'].status" class="sdc-mt-3"></div>
       </div>
     </div>
   </div>
@@ -28,6 +31,7 @@ import NavBar from './components/NavBar.vue';
 import Pagination from './components/Pagination.vue';
 
 import Web from './components/Web.vue';
+import Confiance from './components/Confiance.vue';
 import Legal from './components/Legal.vue';
 
 import Rotate from './components/Rotate.vue';
@@ -37,6 +41,7 @@ export default {
 
   components: {
     Web,
+    Confiance,
     Legal,
     NavBar,
     Pagination,
@@ -44,93 +49,26 @@ export default {
     Rotate,
   },
 
-  props: {
-    // Trusted results per page
-    resultsPerPage: {
-      type: Number,
-      default: 10,
-    },
-
-    // Nb of results per search engine request
-    // resultsPerSERequest: {
-    //   type: Number,
-    //   default: 10,
-    // },
-  },
-
   data() {
     return {
       isHighlighted: false,
-
-      // --- TODO: need to load data frol storage. Better located in created function
-      // storedSettings: {
-      //   extensionSwitch: true,
-      //   apiserver: 'https://sourcesdeconfiance.org/api/trusted',
-      // },
 
       isActive: false,
 
       tab: null, // The tab component
 
-      // queryString: null, // Current search query
-      // results: [], // trusted results
       trustedResultsCount: 0,
 
-      // Search engine related data
-      // se: {
-      //   requestsCount: 0, // Count the number of search requests (should be < maxRequests)
-      //   maxRequests: 0,
-      //   start: 0, // results offset
-      //   //resultsPerPage: 10, // Number of items returned per request
-      //   currentPage: 0, // Current Search engine page
-      //   //initialPage: 1, // The SERP page index
-      //   //additionalSearchLinks: [], // Links to the additional search pages
-      // },
-
-      // poll: null,
-
-      // currentPage: 1, // current Trusted results page
-
-      // pendingRequest: false, // there is an ongoing SE request
-
-      // freshStart: true,
-
-      tabs: {
-        web: { title: 'Web', status: 'active' },
-        legal: { title: 'Lois', status: 'inactive' },
-        delibs: { title: 'Délibérations', status: 'disabled' },
-      },
+      tabs: {},
+      activeTab: null,
 
       loggedIn: false,
     };
   },
 
   computed: {
-    // resultsCount: function() {
-    //   return this.results.length;
-    // },
-
-    // currentResults: function() {
-    //   var start = (this.currentPage - 1) * this.resultsPerPage;
-    //   var stop = start + this.resultsPerPage;
-    //   return this.results.slice(start, stop);
-    // },
-
-    // allFetched: function() {
-    //   console.log('allFetched:');
-    //   return this.se.requestsCount >= this.se.maxRequests;
-    // },
-
-    // pageIncomplete: function() {
-    //   return this.currentResults.length < this.resultsPerPage;
-    // },
-
-    // waitingFoResults: function() {
-    //   return this.pendingRequest || (this.pageIncomplete && !this.allFetched);
-    // },
-
     title: function() {
-      return 'Sources de Confiance';
+      return global.sdcConfig.get('widgets.se_toolbar.title');
     },
 
     mainLogo: function() {
@@ -141,6 +79,8 @@ export default {
   mounted: function() {
     console.log('>sdcFrame:mounted');
 
+    console.log(this.$options.components);
+
     this.prepareUX();
   },
 
@@ -150,7 +90,7 @@ export default {
       this.loggedIn = true;
     },
 
-    // Called from $SE.injectMenuItem activation / deactivation
+    // Called from $SE.injectMenuItem activation /  deactivation
     toggle: function(isVisible) {
       console.log('>frame:toggle');
 
@@ -167,6 +107,18 @@ export default {
       console.log('>prepareUX');
 
       this.$SE.injectMenuItem(this.toggle);
+
+      // Establish navbar
+      this.tabs = global.sdcConfig.get('widgets.navbar');
+      // Find active tab
+      for (var i in this.tabs) {
+        if (this.tabs[i].status == 'active') {
+          this.activeTab = this.tabs[i];
+          break;
+        }
+      }
+      console.log(this.tabs, this.activeTab);
+      console.log('fini');
 
       // Set title
       this.refreshTab(this.title, 0, true);

@@ -3,7 +3,7 @@ import * as helpers from '../helpers/general.js';
 
 // This is our menu control object
 var menu = {
-  el: createTabElement(false), // Create the DOM element
+  el: null, // Create the DOM element
   isActive: false,
 };
 
@@ -136,9 +136,9 @@ export function createSearchLinks(searchWords) {
 //
 // @return     div  frameDiv Element
 //
-export function injectFrame() {
+export function createPanelFrame() {
   var frameDiv = document.createElement('div');
-  document.getElementById('cnt').append(frameDiv);
+  document.getElementById('cnt').insertBefore(frameDiv, null);
   return frameDiv;
 }
 
@@ -163,10 +163,11 @@ function tabHTML(title, active) {
  * @return     div  the div DOM element
  */
 function createTabElement(active) {
+  console.log('>createTabElement: ' + global.prefs);
   // Create the menu DOM element
   var tab = document.createElement('div');
   tab.setAttribute('class', 'hdtb-mitem hdtb-imb');
-  tab.innerHTML = tabHTML('Sources de Confiance', active);
+  tab.innerHTML = tabHTML(global.prefs ? global.sdcConfig.get('widgets.se_toolbar.title') : '<no title>', active);
 
   return tab;
 }
@@ -198,6 +199,8 @@ export function refreshTitle(title) {
 // export function injectMenuItem(el, signalFrame) {
 export function injectMenuItem(signalFrame) {
   console.log('>google:injectMenuItem');
+
+  menu.el = createTabElement(false);
 
   // Insert in google's menu bar
   var toolbar = document.getElementById('hdtb-msb-vis');

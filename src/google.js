@@ -1,5 +1,7 @@
+//import Config from './config/config.js';
 import * as sdc from './sdc.js';
 import * as config from './config/google.js';
+
 console.log('Google SDC instance creation');
 
 // We only need to run SDC on the "All" Google pane (not images, news, etc)

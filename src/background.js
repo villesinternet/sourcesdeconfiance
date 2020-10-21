@@ -1,15 +1,17 @@
-import * as config from './config/config.js';
+import Config from './config/config.js';
 import * as google from './config/google.js';
-
 import * as FakeResults from './background/fakeResults.js';
-
-console.log('Sources de confiance v' + config.extensionversion);
-
 var browser = require('webextension-polyfill');
 
-browser.storage.local.get().then(checkStoredSettings, function(e) {
-  console.error(`Error fetching config: ${e}`);
-});
+var prefs = new Config(require('./config/default.json'));
+console.log(prefs);
+
+console.log('Sources de confiance v' + prefs.get('extension.version'));
+
+applySettings();
+
+// Check API once a day
+if (moreThanXDayAgo(1)) checkAPI();
 
 browser.runtime.onMessage.addListener(handleMessage);
 
@@ -55,106 +57,53 @@ function isPending(se) {
 //
 // Receving messages from the content scripts
 //
-// @param      {<type>}  json          The json
+// @param      {<type>}  msg          The message sent by the extension
 // @param      {<type>}  sender        The sender
-// @param      {<type>}  sendResponse  The send response
+// @param      {<type>}  sendResponse  The function to send response
 //
 function handleMessage(msg, sender, sendResponse) {
-  console.log('>handleMessage:');
+  console.log('>handleMessage: service=' + msg.service);
 
-  console.assert(msg.service);
+  switch (msg.service) {
+    case 'config':
+      switch (msg.payload.type) {
+        case 'GET':
+          console.log('config:GET');
+          msg.payload.status = 'ok';
+          msg.payload.results = {
+            extension: prefs.get('extension'),
+            widgets: prefs.get('widgets'),
+          };
+          sendResponse(msg);
+          break;
 
-  // switch (msg.service)
-  // {
-  //   case 'web':
-  //     console.assert(msg.payload);
-  //     console.assert(msg.payload.type);
-
-  switch (msg.payload.type) {
-    case 'ECHO':
-    case 'CATEGORIZE':
-      enqueue(msg.payload.searchengine, msg, sender);
+        default:
+          console.assert(false, 'unsupported verb=' + msg.payload.type);
+      }
       break;
 
-    case 'GET_SERP':
-      console.log('enqueueing GET_SERP');
-      enqueue(msg.payload.searchengine, msg, sender);
+    case 'web':
+      switch (msg.payload.type) {
+        case 'ECHO':
+        case 'CATEGORIZE':
+          enqueue(msg.payload.searchengine, msg, sender);
+          break;
+
+        case 'GET_SERP':
+          console.log('enqueueing GET_SERP');
+          enqueue(msg.payload.searchengine, msg, sender);
+          break;
+
+        default:
+          console.assert(false, 'unsupported verb=' + msg.payload.type);
+      }
       break;
+
+    default:
+      console.assert(false, 'unsupported service=' + msg.service);
   }
-  //     break;
 
-  //   default:
-  //     console.log('undefined service ' + msg.service);
-  // }
-  return;
-
-  // // Get the search engine configuration
-  // if (msg.searchengine)
-  //   $SE = getSEConfig(msg.searchengine);
-
-  // console.log(msg.type);
-  // switch (msg.type) {
-
-  //   case 'ECHO':
-  //     enqueue(msg.searchengine,msg,sender);
-  //     return;
-
-  //   case 'CATEGORIZE':
-  //     enqueue(msg.searchengine,msg,sender);
-  //     // checkTrusted(msg).then(
-  //     //   function(enrichedmsg) {
-  //     //     browser.tabs.sendMessage(sender.tab.id, { msg: enrichedmsg, message: 'HIGHLIGHT' });
-  //     //   },
-  //     //   function(Error) {
-  //     //     console.log(Error);
-  //     //   }
-  //     // );
-  //     break;
-
-  //   case 'FETCH_AND_CATEGORIZE':
-  //     // Debug only: generate fake results
-  //     if (config.useFakeResults) {
-  //       console.log('useFakeResults');
-
-  //       var results = new FakeResults.get(Math.floor(Math.random() * 10));
-  //       console.log(results);
-  //       browser.tabs.sendMessage(sender.tab.id, {
-  //         msg: results.results,
-  //         message: 'NEXT_RESULTS',
-  //       });
-  //       return;
-  //     }
-
-  //     // Use the provided search link if we have it
-  //     var searchUrl = msg.searchLink;
-  //     console.assert(searchUrl, 'no search link provided');
-  //     // console.log('generating search link: start=' + msg.start + ', resultsPerPage=' + msg.resultsPerPage.toString());
-  //     // searchUrl = 'https://www.google.fr/search?q=' + msg.request + '&start=' + msg.start + '&num=' + msg.resultsPerPage.toString();
-  //     console.log('requesting search link: ' + searchUrl);
-
-  //     getHTML(searchUrl, function(response) {
-  //       extractFromSERP(response, msg, function(resultsmsg) {
-  //         checkTrusted(resultsmsg).then(
-  //           function(enrichedmsg) {
-  //             //send next trusted results back to the content script
-  //             browser.tabs.sendMessage(sender.tab.id, {
-  //               msg: enrichedmsg,
-  //               message: 'NEXT_RESULTS',
-  //             });
-  //           },
-
-  //           function(Error) {
-  //             console.log(Error);
-  //           }
-  //         );
-  //       });
-  //     });
-  //     break;
-
-  //   default:
-  //     console.log('unhandled message');
-  //     break;
-  // }
+  return true;
 }
 
 function poll() {
@@ -170,14 +119,14 @@ function poll() {
       console.log(m.msg.payload.type);
 
       switch (m.msg.payload.type) {
-        case 'ECHO':
-          setPending(se);
+        // case 'ECHO':
+        //   setPending(se);
 
-          browser.tabs.sendMessage(m.sender.tab.id, m.msg);
+        //   browser.tabs.sendMessage(m.sender.tab.id, m.msg);
 
-          clearPending(se);
+        //   clearPending(se);
 
-          break;
+        //   break;
 
         case 'CATEGORIZE':
           setPending(se);
@@ -203,7 +152,7 @@ function poll() {
           break;
 
         case 'GET_SERP':
-          if (config.useFakeResults) {
+          if (prefs.get('useFakeResults')) {
             console.log('useFakeResults');
             m.msg.payload.status = 'ok';
             m.msg.results = new FakeResults.get(Math.floor(Math.random() * 10));
@@ -261,8 +210,8 @@ function checkAPI() {
   console.log('>checkAPI');
 
   var start_time = new Date().getTime();
-  var dailyhello = { version: config.extensionversion, userAgent: window.navigator.userAgent };
-  var url = 'https://sourcesdeconfiance.org/api/version';
+  var dailyhello = { version: prefs.get('extension.version'), userAgent: window.navigator.userAgent };
+  var url = prefs.get('api.version');
   let xhr = new XMLHttpRequest();
   xhr.open('GET', url, true);
   xhr.setRequestHeader('Content-Type', 'data/json');
@@ -270,7 +219,7 @@ function checkAPI() {
     if (xhr.status >= 200 && xhr.status < 300) {
       //LOGS FOR DEBUGGING
       var request_time = new Date().getTime() - start_time;
-      console.log('API version ' + JSON.parse(xhr.response).version + ' (resolved in ' + request_time + 'ms)');
+      console.log('API version ' + JSON.parse(xhr.response).version + ' (resolved in  ' + request_time + 'ms)');
       //console.log(JSON.parse(xhr.response));
     } else {
       console.log(xhr.statusText);
@@ -278,37 +227,21 @@ function checkAPI() {
   };
   xhr.onerror = () => reject(xhr.statusText);
   xhr.send(JSON.stringify(dailyhello));
+
+  prefs.set('extension.ping_date', new Date());
 }
 
-function checkStoredSettings(storedsettings) {
-  console.log('>checkStoredSettings');
+function moreThanXDayAgo(days) {
+  console.log('>moreThanXDayAgo');
+  console.log(Date.parse(new Date()) - Date.parse(prefs.get('extension.ping_date', new Date())) > ((days * 24 * 60) % 60) * 1000);
+  return Date.parse(new Date()) - Date.parse(prefs.get('extension.ping_date', new Date())) > ((days * 24 * 60) % 60) * 1000;
+}
 
-  // COULD BE FACTORIZED
-  var today = new Date();
-  if (!storedsettings.extensionswitch) {
-    config.defaultsettings.lastcheck = today;
-    checkAPI();
-    browser.browserAction.setIcon({ path: '../assets/icons/sdc-48.png' });
-    browser.storage.local.set(config.defaultsettings);
-  } else {
-    if (storedsettings.extensionswitch == 'off') {
-      browser.browserAction.setIcon({ path: '../assets/icons/sdc-off-48.png' });
-    }
-    if (!storedsettings.lastcheck) {
-      storedsettings.lastcheck = today;
-      checkAPI();
-      browser.storage.local.set(storedsettings);
-    } else {
-      var diff = Math.floor((Date.parse(today) - Date.parse(storedsettings.lastcheck)) / 86400000);
-      if (diff > 0) {
-        storedsettings.lastcheck = today;
-        checkAPI();
-        browser.storage.local.set(storedsettings);
-      } else {
-        console.log(storedsettings);
-      }
-    }
-  }
+function applySettings(storedsettings) {
+  console.log('>applySettings');
+
+  // Set icon
+  browser.browserAction.setIcon({ path: prefs.get('extension.active') ? prefs.get('extension.assets.icons.enabled') : prefs.get('extension.assets.icons.disabled') });
 }
 
 // // static test - deliberations knowledge box
@@ -417,7 +350,7 @@ function extractFromSERP(doc, json, callback) {
 
 function checkTrusted(json) {
   console.log('>checkTrusted:');
-
+  console.log(json);
   var start_time = new Date().getTime();
 
   return new Promise((resolve, reject) => {
@@ -428,7 +361,7 @@ function checkTrusted(json) {
       delete json.type;
     }
 
-    json.version = config.extensionversion;
+    json.version = prefs.get('extension.version');
     let xhr = new XMLHttpRequest();
     xhr.open('POST', url, true);
     xhr.setRequestHeader('Content-Type', 'data/json');
