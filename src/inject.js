@@ -139,15 +139,19 @@ function highlight(enrichedjson) {
       margin-left:-26px;
       background-image:url(${pictourl});
     }
-    .g.trustedfirst {
+    .trustedfirst {
       padding: 16px 5px 5px 16px;
+      margin-bottom: 10px;
       border: 1px solid #dfe1e5;
       border-radius: 8px;
       box-shadow: none;
-      width:630px;    }
-      .trustedfirst cite {
-        color: #34a853;
-      }
+      width: 630px;
+    }
+
+    .trustedfirst cite {
+      color: #34a853;
+      padding-left:16px;
+    }
       .trustedfirst:before {
         content: " ";
         color: #44ba3a;

@@ -1,7 +1,7 @@
 {
   "name": "Sources de confiance",
   "description": "Sources de confiance est un complément aux moteurs de recherche pour identifier les sites publics et universitaires",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "manifest_version": 2,
   "icons": {
     "24": "assets/icons/sdc-24.png",
