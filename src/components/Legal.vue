@@ -1,16 +1,16 @@
 <template>
   <div v-show="isActive">
-    <Web service="legal" :se="$SE" :visible="isActive" :status="status" :useSERP="false" :searchWords="searchWords" @trustedresults="trustedResults" />
+    <!-- <Web service="legal" :se="$SE" :visible="isActive" :status="status" :useSERP="false" :getSearchWords="getSearchWords" @trustedresults="trustedResults" /> -->
   </div>
 </template>
 
 <script>
-import Web from './Web.vue';
+// import Web from './Web.vue';
 
 export default {
   name: 'Legal',
   components: {
-    Web,
+    // Web,
   },
 
   props: {
@@ -33,7 +33,7 @@ export default {
 
   data() {
     return {
-      searchWords: '',
+      getSearchWords: '',
     };
   },
 
@@ -45,14 +45,14 @@ export default {
 
   beforeMount: function() {
     console.log('Legal:beforeMount');
-    this.searchWords = this.$SE.getSearchWords() + '&as_sitesearch=legifrance.gouv.fr';
-    console.log('searchWords: ' + this.searchWords);
+    this.getSearchWords = this.$SE.getgetSearchWords() + '&as_sitesearch=legifrance.gouv.fr';
+    console.log('getSearchWords: ' + this.getSearchWords);
   },
 
   mounted: function() {
     console.log('>Legal:mounted');
-    //console.log(this.$SE.createSearchLinks(encodeURIComponent('"' + this.$SE.getSearchWords() + '"' + "+délibération")));
-    //console.log(this.$SE.createSearchLinks(this.searchWords);
+    //console.log(this.$SE.createSearchLinks(encodeURIComponent('"' + this.$SE.getgetSearchWords() + '"' + "+délibération")));
+    //console.log(this.$SE.createSearchLinks(this.getSearchWords);
   },
 
   methods: {

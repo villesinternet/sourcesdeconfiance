@@ -57,7 +57,7 @@ export default {
       required: true,
     },
 
-    searchWords: {
+    getSearchWords: {
       type: String,
       default: '',
     },
@@ -95,7 +95,7 @@ export default {
 
   computed: {
     isCantine: function() {
-      return this.$SE.getSearchWords() == 'cantine paris 13';
+      return this.$SE.getgetSearchWords() == 'cantine paris 13';
     },
 
     cantineImg: function() {
@@ -156,15 +156,15 @@ export default {
   },
 
   mounted: function() {
-    console.log('>Web component mounted');
+    console.log('>Confiance component mounted');
 
     // Register this service in the comms helper
     comms.register(this.service, this.fromBackground);
 
     // Get the searchUrls for this query
-    if (this.searchWords) {
-      console.log('using search words: ' + this.searchWords);
-      this.searchUrls = this.$SE.createSearchLinks(this.searchWords);
+    if (this.getSearchWords) {
+      console.log('using search words: ' + this.getSearchWords);
+      this.searchUrls = this.$SE.createSearchLinks(this.getSearchWords);
     } else this.searchUrls = this.$SE.getSearchLinks();
 
     // Process the results in the SERP, highlight them and add them to the Web panel
@@ -188,7 +188,7 @@ export default {
       comms.toBackground(this.service, {
         searchengine: this.$SE.name,
         type: 'CATEGORIZE',
-        request: this.$SE.getSearchWords(),
+        request: this.$SE.getgetSearchWords(),
         results: seResults,
       });
 
@@ -264,7 +264,7 @@ export default {
           comms.toBackground(this.service, {
             searchengine: this.$SE.name,
             type: 'CATEGORIZE',
-            request: this.$SE.getSearchWords(),
+            request: this.$SE.getgetSearchWords(),
             results: msg.results,
           });
       }

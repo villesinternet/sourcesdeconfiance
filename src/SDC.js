@@ -14,17 +14,15 @@ export function run(searchEngine) {
   comms.init();
 
   // Register confing service
-  comms.register('config', fromBackgroundConfig);
+  //comms.register('config', fromBackgroundConfig);
 
   // Get initiali config
-  comms.toBackground('config', { type: 'GET' }).then(
+  comms.toBackground('config', { type: 'GET_CONFIG' }).then(
     prefs => {
       console.log('>ready');
 
       // Creates Config object in global var so that is can be accessed with dot notation
       global.sdcConfig = new Config(prefs.payload.results);
-      console.log(global.sdcConfig.get('widgets.se_toolbar.title'));
-      // And start the whole system
 
       // What SE are we coming from
       Vue.prototype.$SE = searchEngine;
@@ -40,8 +38,4 @@ export function run(searchEngine) {
     },
     e => console.log('Error reading config: ' + e)
   );
-}
-
-function fromBackgroundConfig() {
-  console.log('>fromBackgroundConfig');
 }

@@ -10,18 +10,47 @@
     }
   },
 
-  "api": {
-    "trusted": "https://sourcesdeconfiance.org/api/trusted",
-    "version": "https://sourcesdeconfiance.org/api/version"
-  },
-
   "useFakeResults": false,
 
-  "google": {
-    "name": "google",
-    "maxResults": 200,
-    "maxResultsPerRequest": 100,
-    "requestsDelay": 1500
+  "search_engines": {
+    "sdc": {
+      "name": "sdc",
+      "requestsDelay": 500,
+      "api": {
+        "trusted": "https://sourcesdeconfiance.org/api/trusted",
+        "version": "https://sourcesdeconfiance.org/api/version"
+      }
+    },
+
+    "google": {
+      "name": "google",
+      "maxResults": 200,
+      "maxResultsPerRequest": 100,
+      "requestsDelay": 2000
+    },
+
+    "paris": {
+      "name": "paris",
+      "maxResults": 200,
+      "maxResultsPerRequest": 20,
+      "resultsPerPage": 20,
+      "requestsDelay": 1500
+    },
+
+    "edutheque": {
+      "name": "edutheque",
+      "maxResults": 200,
+      "maxResultsPerRequest": 20,
+      "resultsPerPage": 20,
+      "requestsDelay": 1500
+    }
+  },
+
+  "components": {
+    "confiance": {
+      "resultsPerPage": 10,
+      "maxResults": 200
+    }
   },
 
   "widgets": {
@@ -31,28 +60,16 @@
     },
 
     "navbar": {
-      "web": {
-        "title": "Web",
-        "component": "Web",
+      "main": {
+        "component": "Main",
+        "title": "Accueil",
+        "status": "inactive"
+      },
+
+      "education": {
+        "component": "Education",
+        "title": "Education",
         "status": "active"
-      },
-
-      "confiance": {
-        "title": "Résultats de confiance",
-        "component": "Confiance",
-        "status": "inactive"
-      },
-
-      "legal": {
-        "title": "Lois",
-        "component": "Legal",
-        "status": "inactive"
-      },
-
-      "delibs": {
-        "title": "Délibérations",
-        "component": null,
-        "status": "disabled"
       }
     }
   }

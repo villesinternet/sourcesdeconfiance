@@ -1,7 +1,9 @@
 <template>
   <div id="app flex">
     <div v-show="isActive" class="sdc-container sdc-mx-40 sdc-max-w-4xl">
-      <div class="sdc-mt-4 sdc-border sdc-border-green-400 sdc-rounded sdc-p-4">
+      <Dd />
+      <!-- <div class="sdc-mt-4 sdc-border sdc-border-green-400 sdc-rounded sdc-p-4"> -->
+      <div class="sdc-mt-4">
         <NavBar :logo="mainLogo" :tabs="tabs" v-on:select="selectTab($event)" @loggedin="hasLoggedIn" />
 
         <div v-if="activeTab" class="sdc-mt-3">
@@ -9,7 +11,7 @@
             v-bind:is="activeTab.component"
             service="web"
             :se="$SE"
-            :visible="isActive"
+            :active="isActive"
             :status="activeTab.status"
             :useSERP="true"
             :loggedIn="loggedIn"
@@ -26,27 +28,17 @@ import Vue from 'vue';
 
 import * as helpers from './helpers/general.js';
 
-import Result from './components/Result.vue';
 import NavBar from './components/NavBar.vue';
-import Pagination from './components/Pagination.vue';
-
-import Web from './components/Web.vue';
-import Confiance from './components/Confiance.vue';
-import Legal from './components/Legal.vue';
-
-import Rotate from './components/Rotate.vue';
+import Main from './components/Main.vue';
+import Education from './components/Education.vue';
 
 export default {
-  name: 'SdC',
+  name: 'panel',
 
   components: {
-    Web,
-    Confiance,
-    Legal,
+    Main,
+    Education,
     NavBar,
-    Pagination,
-    Result,
-    Rotate,
   },
 
   data() {
@@ -79,8 +71,6 @@ export default {
   mounted: function() {
     console.log('>sdcFrame:mounted');
 
-    console.log(this.$options.components);
-
     this.prepareUX();
   },
 
@@ -91,8 +81,8 @@ export default {
     },
 
     // Called from $SE.injectMenuItem activation /  deactivation
-    toggle: function(isVisible) {
-      console.log('>frame:toggle');
+    panelClicked: function(isVisible) {
+      console.log('>panelClicked');
 
       this.isActive = isVisible;
     },
@@ -106,7 +96,7 @@ export default {
     prepareUX: function() {
       console.log('>prepareUX');
 
-      this.$SE.injectMenuItem(this.toggle);
+      this.$SE.injectMenuItem(this.panelClicked);
 
       // Establish navbar
       this.tabs = global.sdcConfig.get('widgets.navbar');
@@ -117,8 +107,6 @@ export default {
           break;
         }
       }
-      console.log(this.tabs, this.activeTab);
-      console.log('fini');
 
       // Set title
       this.refreshTab(this.title, 0, true);

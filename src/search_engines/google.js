@@ -1,6 +1,8 @@
 import Vue from 'vue';
 import * as helpers from '../helpers/general.js';
 
+export var name = 'google';
+
 // This is our menu control object
 var menu = {
   el: null, // Create the DOM element
@@ -16,7 +18,9 @@ var menu = {
  *                             name (title)
  *                             snippet (web page exerpt)
  */
-export function extractFromSERP(doc) {
+export function scrape(doc) {
+  console.log('>Google@scrape');
+
   var results = [];
 
   const elements = doc.getElementsByClassName('rc');
@@ -39,6 +43,45 @@ export function extractFromSERP(doc) {
   return results;
 }
 
+export function getSERP(payload) {
+  console.log('>Google@getSERP');
+
+  // if (sdcConfig.get('useFakeResults')) {
+  //   console.log('useFakeResults');
+  //   payload.status = 'ok';
+  //   return new FakeResults.get(Math.floor(Math.random() * 10));
+  // }
+
+  console.log('requesting search url: ' + payload.searchUrl);
+
+  //return fetch(payload.searchUrl);
+  return new Promise((resolve, reject) => {
+    // Feature detection
+    if (!window.XMLHttpRequest) {
+      reject('!window.XMLHttpRequest');
+      return;
+    }
+
+    // Create new request
+    var xhr = new XMLHttpRequest();
+
+    // Setup callback
+    xhr.onload = () => {
+      resolve(xhr.responseXML);
+    };
+
+    xhr.onerror = () => {
+      console.log('Error: (' + xhr.status + ') ' + xhr.statusText);
+      reject(xhr.statusText);
+    };
+
+    // Get the HTML
+    xhr.open('GET', payload.searchUrl);
+    xhr.responseType = 'document';
+    xhr.send();
+  });
+}
+
 //
 // Gets the query string from the current page
 //
@@ -49,9 +92,17 @@ export function getSearchWords() {
   return document.getElementsByName('q')[0].value;
 }
 
-export function buildSearchUrl(searchWords) {
-  return encodeURI('https://www.google.fr/search?' + 'q=' + searchWords);
+export function getCurrentResultIndex() {
+  var url = new URL(window.location.href);
+  var firstResultIndex = url.searchParams.get('start');
+  if (!firstResultIndex) firstResultIndex = 0;
+
+  return firstResultIndex;
 }
+
+// export function buildSearchUrl(searchWords) {
+//   return encodeURI('https://www.google.fr/search?' + 'q=' + searchWords);
+// }
 
 //
 // Build links table based on the current query
@@ -120,15 +171,9 @@ export function getSearchLinks() {
  * @param      {string}  searchWords  The search words
  * @return     {Array}   List of search links
  */
-export function createSearchLinks(searchWords) {
-  var links = [];
-
-  var index = 0;
-  while (index < 200) {
-    links.push('https://www.google.fr/search?' + 'q=' + searchWords + '&start=' + index + '&num=' + 100);
-    index += Math.min(100, 200 - index);
-  }
-  return links;
+export function buildSearchUrl(searchWords, start, num) {
+  console.log('Google@buildSearchUrl: searchWords=' + searchWords + ', start=' + start + ', num=' + num);
+  return 'https://www.google.fr/search?' + 'q=' + searchWords + '&start=' + start + '&num=' + num;
 }
 
 //
