@@ -1,14 +1,7 @@
 <template>
   <div class="sdc-flex">
-    <div>
-      <!-- <div v-show="active" class="sdc-w-2/3 sdc-mr-2"> -->
-      <div class="sdc-mr-2">
-        <!-- <Confiance :active="active" @categorized="categorized"/> -->
-      </div>
-
-      <!-- <div class="sdc-w-1/3 sdc-ml-2">
-        <Paris :active="active" />
-      </div> -->
+    <div v-for="widget in widgets" class="sdc-mr-2" :class="widget.rootClass">
+      <component :key="widget.name" :is="widget.component" :name="widget.name" :prefs="widget.prefs" />
     </div>
   </div>
 </template>
@@ -16,7 +9,7 @@
 <script>
 import * as comms from '../helpers/comms.js';
 import * as helpers from '../helpers/general.js';
-import Events from '../helpers/eventbus.js';
+import * as Events from '../helpers/events.js';
 
 import Confiance from './Confiance.vue';
 import Paris from './Paris.vue';
@@ -36,18 +29,18 @@ export default {
   },
 
   props: {
-    // active: {
-    //   type: Boolean,
-    //   required: true
-    // },
-    // selected: {
-    //   type: Boolean,
-    //   required: true
-    // }
+    name: {
+      type: String,
+      required: true,
+    },
   },
 
   data() {
-    return {};
+    return {
+      widgets: {},
+
+      active: false,
+    };
   },
 
   computed: {},
@@ -61,26 +54,54 @@ export default {
     // }
   },
 
+  created: function() {
+    this.widgets = global.sdcConfig.get('panel.tabs.main.widgets');
+
+    Events.listen('TAB_SHOW', pl => {
+      console.assert(pl.name, 'Error: name is undefined');
+
+      // Is this for us?
+      if (pl.name != this.name) return;
+
+      console.log(`${this.name} received TAB_SHOW`);
+
+      this.active = true;
+    });
+
+    Events.listen('TAB_HIDE', pl => {
+      console.assert(pl.name, 'Error: name is undefined');
+
+      // Is this for us?
+      if (pl.name != this.name) return;
+      console.log(`${this.name} received TAB_HIDE`);
+
+      this.active = false;
+    });
+
+    Events.listen('TAB_REFRESH', pl => {
+      console.assert(pl.name, 'Error: name is undefined');
+
+      // Is this for us?
+      if (pl.name != this.name) return;
+
+      Object.values(this.widgets).forEach(widget => {
+        Events.send('WIDGET_REFRESH', {
+          name: widget.name,
+        });
+      });
+    });
+  },
+
   mounted: function() {
     console.log(`>${this.$options.name}@mounted: active=${this.active}`);
-
-    // Events.$on('PANEL_ACTIVE', (payload) => {
-    //   console.log('PANEL_ACTIVE');
-    //   console.log(payload);
-    // });
-
-    // Events.$on('TAB_SELECTED', (payload) => {
-    //   console.log('TAB_SELECTED');
-    //   console.log(payload);
-    // });
   },
 
   methods: {
-    categorized: function(results) {
-      console.log(`>${this.$options.name}@categorized`);
-      // We now have categorized results from first SERP - signal it to parent
-      this.$emit('categorized', results);
-    },
+    // categorized: function(results) {
+    //   console.log(`>${this.$options.name}@categorized`);
+    //   // We now have categorized results from first SERP - signal it to parent
+    //   this.$emit('categorized', results);
+    // },
   },
 };
 </script>

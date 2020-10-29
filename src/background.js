@@ -117,10 +117,6 @@ function handleMessage(msg, sender, sendResponse) {
     case 'CATEGORIZE':
       enqueue('sdc', msg, sender, sendResponse);
       break;
-    // case 'GET_SERP':
-    //   console.log('enqueueing GET_SERP');
-    //   enqueue(msg.service, msg, sender, sendResponse);
-    //   break;
 
     case 'GET_RESULTS':
       console.log('enqueueing GET_RESULTS');

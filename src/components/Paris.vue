@@ -25,6 +25,7 @@ import * as se from '../search_engines/paris';
 
 import * as comms from '../helpers/comms.js';
 import * as helpers from '../helpers/general.js';
+import * as Events from '../helpers/events.js';
 
 import Result from './Result.vue';
 import Pagination from './Pagination.vue';
@@ -40,16 +41,19 @@ export default {
   },
 
   props: {
-    active: {
-      type: Boolean,
+    name: {
+      type: String,
+      required: true,
+    },
+    prefs: {
+      type: Object,
       required: true,
     },
   },
 
   data() {
     return {
-      resultsPerPage: global.sdcConfig.get('search_engines.paris.resultsPerPage'),
-      maxResults: global.sdcConfig.get('search_engines.paris.maxResults'),
+      //resultsPerPage: global.sdcConfig.get('search_engines.paris.resultsPerPage')
 
       searchWords: '',
 
@@ -79,8 +83,8 @@ export default {
      * @return     Array  Lust of results
      */
     currentResults: function() {
-      var start = (this.currentPage - 1) * this.resultsPerPage;
-      return this.results.slice(start, start + this.resultsPerPage);
+      var start = (this.currentPage - 1) * this.prefs.resultsPerPage;
+      return this.results.slice(start, start + this.prefs.resultsPerPage);
     },
 
     /**
@@ -89,7 +93,7 @@ export default {
      * @return     boolean
      */
     pageIncomplete: function() {
-      return this.currentResults.length < this.resultsPerPage;
+      return this.currentResults.length < this.prefs.resultsPerPage;
     },
 
     /**
@@ -107,6 +111,15 @@ export default {
       console.log('>' + this.$options.name + '@active changed from ' + oldval + ' to ' + val);
       if (val) this.moreResults();
     },
+  },
+
+  created: function() {
+    Events.listen('WIDGET_REFRESH', pl => {
+      // Is this for us?
+      if (pl.name != this.name) return;
+
+      this.moreResults();
+    });
   },
 
   beforeMount: function() {
@@ -154,10 +167,10 @@ export default {
           })
           .then(
             msg => {
-              console.log('got results back');
+              console.log(`got ${msg.results.length} results back`);
 
               this.pendingRequest = false;
-              console.log(msg);
+
               this.results = this.results.concat(msg.results);
             },
             e => {

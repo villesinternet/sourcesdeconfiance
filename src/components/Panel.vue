@@ -5,10 +5,8 @@
       <div class="sdc-mt-4">
         <NavBar :logo="mainLogo" :tabs="tabs" @loggedin="hasLoggedIn" />
 
-        <div class="sdc-mt-3">
-          <component v-for="tab in tabs" :key="tab.name" :is="tab.component" :name="tab.name" @categorized="categorized" />
-          <!-- <Main v-for="tab in tabs" :key="tab.title" :is="tab.component" :active="active" :selected="tabs['main'] == activeTab" @categorized="categorized"/>
-          <Education v-for="tab in tabs" :key="tab.title" :is="tab.component" :active="active" :selected="tabs['education'] == activeTab" @categorized="categorized"/> -->
+        <div v-for="tab in tabs" v-show="isActiveTab(tab)" class="sdc-mt-3">
+          <component :key="tab.name" :is="tab.component" :name="tab.name" />
         </div>
       </div>
     </div>
@@ -19,7 +17,7 @@
 import Vue from 'vue';
 
 import * as helpers from '../helpers/general.js';
-import Events from '../helpers/eventbus.js';
+import * as Events from '../helpers/events.js';
 
 import NavBar from './NavBar.vue';
 import Main from './Main.vue';
@@ -83,15 +81,36 @@ export default {
       }
     }
 
-    Events.$on('TAB_CLICKED', pl => {
+    Events.listen('TAB_CLICKED', pl => {
       console.log(`TAB_CLICKED ${pl.clickedTab.title}`);
 
-      Object.values(this.tabs).forEach(tab => {
-        if (tab.status == 'disabled') return;
-        tab.status = pl.clickedTab == tab ? 'active' : 'inactive';
+      this.activeTab.status = 'inactive';
+
+      // Hide active tab
+      console.log('hiding ', this.activeTab.name);
+      Events.send('TAB_HIDE', {
+        name: this.activeTab.name,
       });
 
       this.activeTab = pl.clickedTab;
+
+      this.activeTab.status = 'active';
+
+      // Show new active tab
+      console.log('showing ', this.activeTab.name);
+      Events.send('TAB_SHOW', {
+        name: this.activeTab.name,
+      });
+
+      // Refresh content
+      Events.send('TAB_REFRESH', {
+        name: this.activeTab.name,
+      });
+    });
+
+    Events.listen('CATEGORIZED_RESULTS', pl => {
+      console.log('CATEGORIZED_RESULTS from ' + pl.name);
+      this.categorized(pl.results);
     });
   },
 
@@ -106,8 +125,8 @@ export default {
   },
 
   methods: {
-    isTabSelected: function(tab) {
-      console.log(`>${this.$options.name}@isTabSelected: tab=${tab.title} ${tab.status == 'active'}`);
+    isActiveTab: function(tab) {
+      console.log(`>${this.$options.name}@isActiveTab: ${tab.name} ${tab == this.activeTab}`);
       return tab == this.activeTab;
     },
 
@@ -121,13 +140,18 @@ export default {
     // Called from $SE.injectMenuItem activation /  deactivation
     panelClicked: function(active) {
       console.log(`>${this.$options.name}@panelClicked`);
+
+      // Set new active tab (this updates the navbar as well)
       this.active = active;
 
-      Events.$emit('PANEL_ACTIVE', {
-        activeTab: this.activeTab,
+      // Show new active tab
+      console.log('showing ', this.activeTab.name);
+      Events.send('TAB_SHOW', {
+        name: this.activeTab.name,
       });
 
-      Events.$emit('TAB_REFRESH', {
+      // Refresh content
+      Events.send('TAB_REFRESH', {
         name: this.activeTab.name,
       });
     },
@@ -166,7 +190,6 @@ export default {
 
     categorized: function(results) {
       console.log(`>${this.$options.name}@categorized`);
-      console.log(results);
       this.$SE.highlight(results);
     },
 

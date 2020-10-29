@@ -2,13 +2,6 @@
   <div class="sdc-flex">
     <div v-for="widget in widgets" class="sdc-mr-2" :class="widget.rootClass">
       <component :key="widget.name" :is="widget.component" :name="widget.name" />
-      <!-- <div  class="sdc-w-2/3 sdc-mr-2">
-        <Canope/>
-      </div>
-
-      <div class="sdc-w-1/3 sdc-mr-2">
-        <Edutheque/>
-      </div> -->
     </div>
   </div>
 </template>
@@ -16,7 +9,7 @@
 <script>
 import * as comms from '../helpers/comms.js';
 import * as helpers from '../helpers/general.js';
-import Events from '../helpers/eventbus.js';
+import * as Events from '../helpers/events.js';
 
 import Edutheque from './Edutheque.vue';
 import Canope from './Canope.vue';
@@ -34,21 +27,13 @@ export default {
       type: String,
       required: true,
     },
-
-    // active: {
-    //   type: Boolean,
-    //   required: true
-    // },
-
-    // selected: {
-    //   type: Boolean,
-    //   required: true
-    // },
   },
 
   data() {
     return {
       widgets: {},
+
+      active: false,
     };
   },
 
@@ -79,17 +64,35 @@ export default {
   mounted: function() {
     console.log(`>${this.name}@mounted`);
 
-    Events.$on('TAB_REFRESH', pl => {
-      console.log('received TAB_REFRESH');
+    Events.listen('TAB_SHOW', pl => {
       console.assert(pl.name, 'Error: name is undefined');
 
       // Is this for us?
       if (pl.name != this.name) return;
 
-      console.log('For us');
+      console.log(`${this.name} received TAB_SHOW`);
+
+      this.active = true;
+    });
+
+    Events.listen('TAB_HIDE', pl => {
+      console.assert(pl.name, 'Error: name is undefined');
+
+      // Is this for us?
+      if (pl.name != this.name) return;
+      console.log(`${this.name} received TAB_HIDE`);
+
+      this.active = false;
+    });
+
+    Events.listen('TAB_REFRESH', pl => {
+      console.assert(pl.name, 'Error: name is undefined');
+
+      // Is this for us?
+      if (pl.name != this.name) return;
 
       Object.values(this.widgets).forEach(widget => {
-        Events.$emit('WIDGET_REFRESH', {
+        Events.send('WIDGET_REFRESH', {
           name: widget.name,
         });
       });

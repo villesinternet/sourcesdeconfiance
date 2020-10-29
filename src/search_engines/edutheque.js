@@ -20,7 +20,6 @@ export function scrape(doc) {
 
   const elements = doc.getElementsByClassName('results-entry');
   console.assert(elements, 'Could not find results-entry elements');
-  console.log(elements);
 
   for (var i = 0; i < elements.length; i++) {
     var url = elements[i].getElementsByTagName('a')[0];

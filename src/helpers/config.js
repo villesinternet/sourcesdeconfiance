@@ -49,7 +49,7 @@ export default class Config {
    *
    */
   get(path, defaultValue) {
-    console.log(`>config@get: path=${path}`);
+    //console.log(`>config@get: path=${path}`);
 
     const val = _.get(this.config, path, defaultValue);
 

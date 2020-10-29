@@ -20,7 +20,6 @@ export function scrape(doc) {
 
   const elements = doc.getElementsByClassName('card--type-notice');
   console.assert(elements, 'Could not find card--type-notice elements');
-  console.log(elements);
 
   for (var i = 0; i < elements.length; i++) {
     var url = elements[i].getElementsByTagName('a')[0];

@@ -32,6 +32,7 @@
 <script>
 import * as comms from '../helpers/comms.js';
 import * as helpers from '../helpers/general.js';
+import * as Events from '../helpers/events.js';
 
 import Result from './Result.vue';
 import Pagination from './Pagination.vue';
@@ -49,41 +50,18 @@ export default {
   },
 
   props: {
-    // se: {
-    //   type: Object,
-    //   required: true,
-    // },
-    // status: {
-    //   type: String,
-    //   required: true,
-    // },
-    // active: {
-    //   type: Boolean,
-    //   required: true,
-    // },
-    // getSearchWords: {
-    //   type: String,
-    //   default: '',
-    // },
-    // useSERP: {
-    //   type: Boolean,
-    //   required: true,
-    // },
-    // service: {
-    //   type: String,
-    //   required: true,
-    // },
-    // loggedIn: {
-    //   type: Boolean,
-    //   default: false,
-    // },
+    name: {
+      type: String,
+      required: true,
+    },
+    prefs: {
+      type: Object,
+      required: true,
+    },
   },
 
   data() {
     return {
-      resultsPerPage: global.sdcConfig.get('components.confiance.resultsPerPage'),
-      maxResults: global.sdcConfig.get('components.confiance.maxResults'),
-
       searchWords: '',
 
       trusted: [], // The trusted results
@@ -126,8 +104,8 @@ export default {
      * @return     Array  Lust of results
      */
     currentResults: function() {
-      var start = (this.currentPage - 1) * this.resultsPerPage;
-      return this.trusted.slice(start, start + this.resultsPerPage);
+      var start = (this.currentPage - 1) * this.prefs.resultsPerPage;
+      return this.trusted.slice(start, start + this.prefs.resultsPerPage);
     },
 
     /**
@@ -136,8 +114,8 @@ export default {
      * @return     boolean
      */
     pageIncomplete: function() {
-      //console.log(`>${this.$options.name}@pageIncomplete`);
-      return this.currentResults.length < this.resultsPerPage;
+      //console.log(`>${this.name}@pageIncomplete`);
+      return this.currentResults.length < this.prefs.resultsPerPage;
     },
 
     /**
@@ -146,12 +124,12 @@ export default {
      * @return     {<type>}  { description_of_the_return_value }
      */
     allFetched: function() {
-      //console.log(`>${this.$options.name}@allFetched`);
+      //console.log(`>${this.name}@allFetched`);
       return this.se.resultsCount >= this.se.maxResults || this.se.noMoreResults;
     },
 
     waitingFoResults: function() {
-      //console.log(`>${this.$options.name}@waitingFoResults`);
+      //console.log(`>${this.name}@waitingFoResults`);
       return this.pendingRequest;
       //return this.pendingRequest || (this.pageIncomplete && !this.allFetched);
     },
@@ -159,13 +137,22 @@ export default {
 
   watch: {
     // active: function(val, oldval) {
-    //   console.log('>' + this.$options.name + '@active changed from ' + oldval + ' to ' + val);
+    //   console.log('>' + this.name + '@active changed from ' + oldval + ' to ' + val);
     //   //this.moreResults();
     // },
   },
 
+  created: function() {
+    Events.listen('WIDGET_REFRESH', pl => {
+      // Is this for us?
+      if (pl.name != this.name) return;
+
+      this.moreResults();
+    });
+  },
+
   beforeMount: function() {
-    console.log('>' + this.$options.name + '@beforeMount');
+    console.log('>' + this.name + '@beforeMount');
   },
 
   mounted: function() {
@@ -190,7 +177,7 @@ export default {
      * firstResults - categorize results we have received from the first SERP
      */
     firstResults: function() {
-      console.log('>' + this.$options.name + '@firstResults for ' + this.$SE.name);
+      console.log('>' + this.name + '@firstResults for ' + this.$SE.name);
 
       // Extract all results
       var seResults = this.$SE.scrape(document);
@@ -217,7 +204,10 @@ export default {
             this.pendingRequest = false;
 
             // We now have categorized results from first SERP - signal it to parent
-            this.$emit('categorized', newResults);
+            Events.send('CATEGORIZED_RESULTS', {
+              name: this.name,
+              results: newResults,
+            });
 
             if (this.se.start == 0)
               // If current SERP is the first search page
@@ -237,7 +227,7 @@ export default {
      * moreResults - search for additional results if needed
      */
     moreResults: function() {
-      console.log('>' + this.$options.name + '@moreResults');
+      console.log('>' + this.name + '@moreResults');
 
       if (this.pendingRequest) {
         console.log('Request already pending. Moving on.');
@@ -274,16 +264,13 @@ export default {
         })
         .then(
           msg => {
-            console.log(msg);
             this.pendingRequest = false;
 
-            console.log('got ' + msg.results.length + ' more results.');
+            console.log(`got ${msg.results.length} results back`);
 
             if (!msg.results.length) this.se.noMoreResults = true;
 
-            console.log('se.index=' + this.se.index);
             this.se.index += msg.results.length;
-            console.log('se.index=' + this.se.index);
 
             if (this.allFetched) {
               console.log('all fetched');
@@ -302,7 +289,7 @@ export default {
                 m => {
                   this.pendingRequest = false;
 
-                  console.log('>CATEGORIZE: got ' + m.payload.results.length + ' results');
+                  console.log(`>CATEGORIZE: got ${m.payload.results.length} results`);
 
                   this.se.resultsCount += m.payload.results.length;
 

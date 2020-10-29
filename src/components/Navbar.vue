@@ -52,7 +52,7 @@
 
 <script>
 import * as helpers from '../helpers/general.js';
-import Events from '../helpers/eventbus.js';
+import * as Events from '../helpers/events.js';
 
 import Login from './Login.vue';
 
@@ -102,7 +102,7 @@ export default {
 
   methods: {
     tabSelected: function(tab) {
-      Events.$emit('TAB_CLICKED', {
+      Events.send('TAB_CLICKED', {
         clickedTab: tab,
       });
     },

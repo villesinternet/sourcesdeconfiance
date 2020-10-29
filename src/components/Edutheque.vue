@@ -14,6 +14,10 @@
           <div class="sdc-pr-2 sdc-overflow-hidden">
             <Result v-for="result in results" :key="result.url" :result="result" class="sdc-pb-3" />
           </div>
+
+          <div v-if="pendingRequest" class="sdc-flex sdc-m-auto sdc-justify-center">
+            <Rotate />
+          </div>
         </div>
       </div>
     </div>
@@ -25,7 +29,7 @@ import * as Edutheque from '../search_engines/edutheque';
 
 import * as comms from '../helpers/comms.js';
 import * as helpers from '../helpers/general.js';
-import Events from '../helpers/eventbus.js';
+import * as Events from '../helpers/events.js';
 
 import Result from './Result.vue';
 import Pagination from './Pagination.vue';
@@ -116,7 +120,7 @@ export default {
   },
 
   created: function() {
-    Events.$on('WIDGET_REFRESH', pl => {
+    Events.listen('WIDGET_REFRESH', pl => {
       // Is this for us?
       if (pl.name != this.name) return;
 
@@ -170,8 +174,6 @@ export default {
         //var searchUrl = this.getNextSearchUrl();
         console.log('need more results for ' + this.searchWords);
 
-        console.assert(!this.pendingRequest, 'pendingRequest should not be true');
-
         var num = Math.min(this.se.maxResultsPerRequest, this.se.maxResults - this.se.resultsCount);
         var searchUrl = Edutheque.buildSearchUrl(this.searchWords, this.se.index, num);
 
@@ -187,7 +189,6 @@ export default {
               console.log(`${this.name}: got results back`);
 
               this.pendingRequest = false;
-              console.log(msg);
               this.results = this.results.concat(msg.results);
             },
             e => {
