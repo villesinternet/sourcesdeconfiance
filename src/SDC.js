@@ -1,9 +1,9 @@
 import Vue from 'vue';
-import Config from './config/config.js';
 
-import panel from './panel';
-
+import Config from './helpers/config.js';
 import * as comms from './helpers/comms.js';
+
+import Panel from './components/panel.vue';
 
 export var prefs = null;
 
@@ -18,11 +18,13 @@ export function run(searchEngine) {
 
   // Get initiali config
   comms.toBackground('config', { type: 'GET_CONFIG' }).then(
-    prefs => {
-      console.log('>ready');
+    conf => {
+      console.log('>got config');
+      console.log(conf);
 
       // Creates Config object in global var so that is can be accessed with dot notation
-      global.sdcConfig = new Config(prefs.payload.results);
+      global.sdcConfig = new Config(conf.payload.results);
+      console.log(global.sdcConfig);
 
       // What SE are we coming from
       Vue.prototype.$SE = searchEngine;
@@ -32,7 +34,7 @@ export function run(searchEngine) {
       var frameVue = new Vue({
         el: panelDiv,
         render: h => {
-          return h(panel);
+          return h(Panel);
         },
       });
     },

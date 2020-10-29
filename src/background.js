@@ -1,9 +1,10 @@
-import Config from './config/config.js';
+import Config from './helpers/config.js';
 
 import * as Sdc from './search_engines/sdc.js';
 import * as Google from './search_engines/google.js';
 import * as Paris from './search_engines/paris.js';
 import * as Edutheque from './search_engines/edutheque.js';
+import * as Canope from './search_engines/canope.js';
 
 import * as FakeResults from './background/fakeResults.js';
 
@@ -38,6 +39,12 @@ var services = {
   edutheque: {
     config: sdcConfig.get('search_engines.edutheque'),
     api: Edutheque,
+    pending: false,
+    queue: [],
+  },
+  canope: {
+    config: sdcConfig.get('search_engines.canope'),
+    api: Canope,
     pending: false,
     queue: [],
   },
@@ -99,10 +106,10 @@ function handleMessage(msg, sender, sendResponse) {
       console.log('GET_CONFIG');
       msg.payload.status = 'ok';
       msg.payload.results = {
+        se_widgets: sdcConfig.get('se_widgets'),
+        panel: sdcConfig.get('panel'),
         extension: sdcConfig.get('extension'),
-        widgets: sdcConfig.get('widgets'),
         search_engines: sdcConfig.get('search_engines'),
-        components: sdcConfig.get('components'),
       };
       sendResponse(msg);
       break;
@@ -177,7 +184,7 @@ function poll() {
             function(svc, serp) {
               console.log('back from getSERP for service: ' + svc);
 
-              this.msg.payload.statua = 'ok';
+              this.msg.payload.status = 'ok';
 
               // Scrape results from SERP
               this.msg.payload.results = services[svc].api.scrape(serp);

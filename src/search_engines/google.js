@@ -212,7 +212,7 @@ function createTabElement(active) {
   // Create the menu DOM element
   var tab = document.createElement('div');
   tab.setAttribute('class', 'hdtb-mitem hdtb-imb');
-  tab.innerHTML = tabHTML(global.prefs ? global.sdcConfig.get('widgets.se_toolbar.title') : '<no title>', active);
+  tab.innerHTML = tabHTML(global.prefs ? global.sdcConfig.get('se_widgets.toolbar.title') : '<no title>', active);
 
   return tab;
 }
@@ -279,43 +279,69 @@ export function injectMenuItem(signalFrame) {
 }
 
 // Highlight results in home page
-export function highlight(enrichedjson) {
-  const resultslist = document.getElementsByClassName('g');
+// export function highlight(enrichedjson) {
+//   const resultslist = document.getElementsByClassName('g');
 
-  //check if it is the first result page, to apply specific style to the first result entry
-  var firstresult;
-  if (window.location.href.indexOf('&start=0') != -1) {
-    firstresult = true;
-  } else if (window.location.href.indexOf('?start=') != -1) {
-    firstresult = false;
-  } else if (window.location.href.indexOf('&start=') != -1) {
-    firstresult = false;
-  } else {
-    firstresult = true;
-  }
+//   //check if it is the first result page, to apply specific style to the first result entry
+//   var firstresult;
+//   if (window.location.href.indexOf('&start=0') != -1) {
+//     firstresult = true;
+//   } else if (window.location.href.indexOf('?start=') != -1) {
+//     firstresult = false;
+//   } else if (window.location.href.indexOf('&start=') != -1) {
+//     firstresult = false;
+//   } else {
+//     firstresult = true;
+//   }
 
-  for (var i = 0; i < enrichedjson.length; i++) {
-    if (enrichedjson[i].status != 'trusted') continue;
+//   for (var i = 0; i < enrichedjson.length; i++) {
+//     if (enrichedjson[i].status != 'trusted') continue;
 
-    resultslist[enrichedjson[i].id].classList.add('trusted');
+//     resultslist[enrichedjson[i].id].classList.add('trusted');
 
-    if (firstresult) {
-      resultslist[enrichedjson[i].id].classList.add('trustedfirst');
-      resultslist[enrichedjson[i].id].classList.add('tooltip');
-      var para = document.createElement('span');
-      para.classList.add('tooltiptext');
-      para.appendChild(document.createTextNode('Source de confiance '));
-      let newNode = resultslist[enrichedjson[i].id];
-      newNode.appendChild(para);
-      var parentDiv = document.getElementById('rso');
-      var firstChildNode = document.getElementById('rso').firstElementChild;
-      parentDiv.insertBefore(newNode, firstChildNode);
-      firstresult = false;
-      if (resultslist[enrichedjson[i].id].classList.contains('g-blk')) {
-        //styling - only if the first trusted result is a special box mnr-c g-blk - could be improved
-        resultslist[enrichedjson[i].id].classList.remove('trustedfirst');
-        resultslist[enrichedjson[i].id].classList.add('trusted');
-      }
-    }
-  }
+//     if (firstresult) {
+//       resultslist[enrichedjson[i].id].classList.add('trustedfirst');
+//       resultslist[enrichedjson[i].id].classList.add('tooltip');
+//       var para = document.createElement('span');
+//       para.classList.add('tooltiptext');
+//       para.appendChild(document.createTextNode('Source de confiance '));
+//       let newNode = resultslist[enrichedjson[i].id];
+//       newNode.appendChild(para);
+//       var parentDiv = document.getElementById('rso');
+//       var firstChildNode = document.getElementById('rso').firstElementChild;
+//       parentDiv.insertBefore(newNode, firstChildNode);
+//       firstresult = false;
+//       if (resultslist[enrichedjson[i].id].classList.contains('g-blk')) {
+//         //styling - only if the first trusted result is a special box mnr-c g-blk - could be improved
+//         resultslist[enrichedjson[i].id].classList.remove('trustedfirst');
+//         resultslist[enrichedjson[i].id].classList.add('trusted');
+//       }
+//     }
+//  }
+//}
+export function highlight(enrichedResults) {
+  console.log(`>${name}@highlight`);
+  const results = document.getElementsByClassName('rc');
+
+  var firstFound = false;
+
+  enrichedResults.forEach(enriched => {
+    results.forEach(result => {
+      // Do we have a match
+      if (result.getElementsByTagName('a')[0].href != enriched.url) return;
+
+      result.classList.add('trusted');
+
+      // Do we need to process a first found
+      if (firstFound) return;
+
+      firstFound = true;
+
+      // Special treatment for first result
+      result.classList.add('trustedfirst');
+      result.classList.add('tooltip');
+
+      document.getElementById('rso').insertBefore(result, document.getElementById('rso').firstChild);
+    });
+  });
 }

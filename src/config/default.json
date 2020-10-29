@@ -43,33 +43,57 @@
       "maxResultsPerRequest": 20,
       "resultsPerPage": 20,
       "requestsDelay": 1500
-    }
-  },
-
-  "components": {
-    "confiance": {
-      "resultsPerPage": 10,
-      "maxResults": 200
-    }
-  },
-
-  "widgets": {
-    "se_toolbar": {
-      "title": "Sources de Confiance",
-      "active": false
     },
 
+    "canope": {
+      "name": "edutheque",
+      "maxResults": 200,
+      "maxResultsPerRequest": 20,
+      "resultsPerPage": 20,
+      "requestsDelay": 1500
+    }
+  },
+
+  "se_widgets": {
+    "toolbar": {
+      "title": "Sources de Confiance",
+      "active": false
+    }
+  },
+
+  "panel": {
     "navbar": {
-      "main": {
+      "0": {
+        "name": "main",
         "component": "Main",
         "title": "Accueil",
         "status": "inactive"
       },
 
-      "education": {
+      "1": {
+        "name": "education",
         "component": "Education",
         "title": "Education",
         "status": "active"
+      }
+    },
+
+    "tabs": {
+      "education": {
+        "name": "education",
+        "title": "Education",
+        "widgets": {
+          "0": {
+            "name": "canope",
+            "component": "Canope",
+            "rootClass": "sdc-w-2/3"
+          },
+          "1": {
+            "name": "edutheque",
+            "component": "Edutheque",
+            "rootClass": "sdc-w-1/3"
+          }
+        }
       }
     }
   }

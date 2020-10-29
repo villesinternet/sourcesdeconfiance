@@ -1,22 +1,14 @@
 <template>
   <div id="app flex">
-    <div v-show="isActive" class="sdc-container sdc-mx-40 sdc-max-w-4xl">
-      <Dd />
+    <div v-show="active" class="sdc-container sdc-mx-40 sdc-max-w-4xl">
       <!-- <div class="sdc-mt-4 sdc-border sdc-border-green-400 sdc-rounded sdc-p-4"> -->
       <div class="sdc-mt-4">
-        <NavBar :logo="mainLogo" :tabs="tabs" v-on:select="selectTab($event)" @loggedin="hasLoggedIn" />
+        <NavBar :logo="mainLogo" :tabs="tabs" @loggedin="hasLoggedIn" />
 
-        <div v-if="activeTab" class="sdc-mt-3">
-          <component
-            v-bind:is="activeTab.component"
-            service="web"
-            :se="$SE"
-            :active="isActive"
-            :status="activeTab.status"
-            :useSERP="true"
-            :loggedIn="loggedIn"
-            @trustedresults="trustedResults"
-          ></component>
+        <div class="sdc-mt-3">
+          <component v-for="tab in tabs" :key="tab.name" :is="tab.component" :name="tab.name" @categorized="categorized" />
+          <!-- <Main v-for="tab in tabs" :key="tab.title" :is="tab.component" :active="active" :selected="tabs['main'] == activeTab" @categorized="categorized"/>
+          <Education v-for="tab in tabs" :key="tab.title" :is="tab.component" :active="active" :selected="tabs['education'] == activeTab" @categorized="categorized"/> -->
         </div>
       </div>
     </div>
@@ -26,11 +18,12 @@
 <script>
 import Vue from 'vue';
 
-import * as helpers from './helpers/general.js';
+import * as helpers from '../helpers/general.js';
+import Events from '../helpers/eventbus.js';
 
-import NavBar from './components/NavBar.vue';
-import Main from './components/Main.vue';
-import Education from './components/Education.vue';
+import NavBar from './NavBar.vue';
+import Main from './Main.vue';
+import Education from './Education.vue';
 
 export default {
   name: 'panel',
@@ -45,7 +38,7 @@ export default {
     return {
       isHighlighted: false,
 
-      isActive: false,
+      active: false,
 
       tab: null, // The tab component
 
@@ -60,7 +53,7 @@ export default {
 
   computed: {
     title: function() {
-      return global.sdcConfig.get('widgets.se_toolbar.title');
+      return global.sdcConfig.get('se_widgets.toolbar.title');
     },
 
     mainLogo: function() {
@@ -68,45 +61,92 @@ export default {
     },
   },
 
+  watch: {
+    // active: function(active, old)
+    // {
+    //   console.log(`>${this.$options.name}@active: active=${active}, old=${old}`);
+    //   if (!active) return;
+    //   console.log(`Setting active tab to ${this.activeTab.title}`);
+    // }
+  },
+
+  created: function() {
+    console.log(`>${this.$options.name}@created`);
+
+    // Get tabs configuration
+    this.tabs = global.sdcConfig.get('panel.navbar');
+
+    for (var i in this.tabs) {
+      if (this.tabs[i].status == 'active') {
+        this.activeTab = this.tabs[i];
+        break;
+      }
+    }
+
+    Events.$on('TAB_CLICKED', pl => {
+      console.log(`TAB_CLICKED ${pl.clickedTab.title}`);
+
+      Object.values(this.tabs).forEach(tab => {
+        if (tab.status == 'disabled') return;
+        tab.status = pl.clickedTab == tab ? 'active' : 'inactive';
+      });
+
+      this.activeTab = pl.clickedTab;
+    });
+  },
+
+  beforeMount: function() {
+    console.log(`>${this.$options.name}@beforeMount`);
+  },
+
   mounted: function() {
-    console.log('>sdcFrame:mounted');
+    console.log(`>${this.$options.name}@mounted`);
 
     this.prepareUX();
   },
 
   methods: {
+    isTabSelected: function(tab) {
+      console.log(`>${this.$options.name}@isTabSelected: tab=${tab.title} ${tab.status == 'active'}`);
+      return tab == this.activeTab;
+    },
+
     hasLoggedIn: function() {
       console.log('>loggedIn');
+
       this.loggedIn = true;
+      this.tabs['education'].status = 'inactive';
     },
 
     // Called from $SE.injectMenuItem activation /  deactivation
-    panelClicked: function(isVisible) {
-      console.log('>panelClicked');
+    panelClicked: function(active) {
+      console.log(`>${this.$options.name}@panelClicked`);
+      this.active = active;
 
-      this.isActive = isVisible;
+      Events.$emit('PANEL_ACTIVE', {
+        activeTab: this.activeTab,
+      });
+
+      Events.$emit('TAB_REFRESH', {
+        name: this.activeTab.name,
+      });
     },
 
-    selectTab: function(tabId) {
-      console.log('>selectTab: tabId= ' + tabId);
-      for (const prop in this.tabs) if (this.tabs[prop].status != 'disabled') this.tabs[prop].status = 'inactive';
-      this.tabs[tabId].status = 'active';
-    },
+    // selectTab: function(tabId) {
+    //   console.log('>selectTab: tabId= ' + tabId);
+    //   for (const prop in this.tabs) {
+    //     if (this.tabs[prop].status == 'disabled') continue;
+    //     if (prop == tabId) this.tabs[prop].status = 'active';
+    //     else this.tabs[prop].status = 'inactive';
+    //   }
+    //   this.activeTab = this.tabs[tabId];
+
+    // },
 
     prepareUX: function() {
       console.log('>prepareUX');
 
       this.$SE.injectMenuItem(this.panelClicked);
-
-      // Establish navbar
-      this.tabs = global.sdcConfig.get('widgets.navbar');
-      // Find active tab
-      for (var i in this.tabs) {
-        if (this.tabs[i].status == 'active') {
-          this.activeTab = this.tabs[i];
-          break;
-        }
-      }
 
       // Set title
       this.refreshTab(this.title, 0, true);
@@ -122,6 +162,12 @@ export default {
     highlight: function(enrichedjson) {
       console.log('>highlight');
       this.$SE.highlight(enrichedjson);
+    },
+
+    categorized: function(results) {
+      console.log(`>${this.$options.name}@categorized`);
+      console.log(results);
+      this.$SE.highlight(results);
     },
 
     /**
@@ -379,5 +425,5 @@ a {
 }
 @tailwind components;
 @tailwind utilities;
-@import './assets/styles/google.css';
+@import '../assets/styles/google.css';
 </style>

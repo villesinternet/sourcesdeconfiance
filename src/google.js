@@ -1,4 +1,3 @@
-//import Config from './config/config.js';
 import * as sdc from './sdc.js';
 import * as Google from './search_engines/google.js';
 

@@ -10,11 +10,7 @@ export default class Config {
   constructor(config) {
     console.log('>Config:constructor');
 
-    if (config) {
-      this.config = config;
-      return;
-    }
-    this.config = defaults;
+    this.config = config;
 
     // browser.storage.local.get()
     //    .then(
@@ -53,7 +49,12 @@ export default class Config {
    *
    */
   get(path, defaultValue) {
-    return _.get(this.config, path, defaultValue);
+    console.log(`>config@get: path=${path}`);
+
+    const val = _.get(this.config, path, defaultValue);
+
+    console.assert(val != undefined, `Warning: ${path} config is undefined`);
+    return val;
   }
 
   /**

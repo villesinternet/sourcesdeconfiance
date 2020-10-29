@@ -1,24 +1,31 @@
 <template>
-  <div v-show="isActive">
-    <div v-if="service == 'web'">
-      <WebFilters v-if="loggedIn" />
-      <div class="sdc-pb-4 sdc-text-gray-500 sdc-text-s">{{ resultsCount }} résultats de confiance</div>
+  <div>
+    <div class="sdc-rounded-t sdc-bg-gray-400 sdc-p-2 sdc-flex sdc-justify-start sdc-items-center">
+      <img class="sdc-pr-1" :src="sdcLogo" />
+      <h2>{{ title }}</h2>
     </div>
 
-    <div class="sdc-flex">
-      <div class="sdc-pr-2 sdc-overflow-hidden">
-        <Result v-for="result in currentResults" :key="result.url" :result="result" class="sdc-pb-3" />
+    <div class="sdc-border sdc-border-gray-400 sdc-rounded-b sdc-p-2 ">
+      <div class="sdc-overflow-hidden">
+        <!-- <WebFilters v-if="loggedIn" /> -->
+        <div class="sdc-pb-4 sdc-text-gray-500 sdc-text-s"></div>
+
+        <div class="sdc-flex">
+          <div class="sdc-pr-2 sdc-overflow-hidden">
+            <Result v-for="result in currentResults" :key="result.url" :result="result" class="sdc-pb-3" />
+          </div>
+          <!-- <div v-if="isCantine">
+            <img class="sc-w-2/5" :src="cantineImg" />
+          </div> -->
+        </div>
+
+        <div v-if="waitingFoResults" class="sdc-flex sdc-m-auto sdc-justify-center">
+          <Rotate />
+        </div>
+
+        <Pagination v-show="trusted.length" v-model="currentPage" :countItems="trusted.length" :itemsPerPage="10" @pageselect="pageSelect" />
       </div>
-      <div v-if="isCantine">
-        <img class="sc-w-2/5" :src="cantineImg" />
-      </div>
     </div>
-
-    <div v-if="waitingFoResults" class="sdc-flex sdc-m-auto sdc-justify-center">
-      <Rotate />
-    </div>
-
-    <Pagination v-show="results.length" v-model="currentPage" :countItems="results.length" :itemsPerPage="10" @pageselect="pageSelect" />
   </div>
 </template>
 
@@ -38,76 +45,79 @@ export default {
     Pagination,
     Result,
     Rotate,
-    WebFilters,
+    //WebFilters,
   },
 
   props: {
-    se: {
-      type: Object,
-      required: true,
-    },
-
-    status: {
-      type: String,
-      required: true,
-    },
-
-    visible: {
-      type: Boolean,
-      required: true,
-    },
-
-    getSearchWords: {
-      type: String,
-      default: '',
-    },
-
-    useSERP: {
-      type: Boolean,
-      required: true,
-    },
-
-    service: {
-      type: String,
-      required: true,
-    },
-
-    loggedIn: {
-      type: Boolean,
-      default: false,
-    },
+    // se: {
+    //   type: Object,
+    //   required: true,
+    // },
+    // status: {
+    //   type: String,
+    //   required: true,
+    // },
+    // active: {
+    //   type: Boolean,
+    //   required: true,
+    // },
+    // getSearchWords: {
+    //   type: String,
+    //   default: '',
+    // },
+    // useSERP: {
+    //   type: Boolean,
+    //   required: true,
+    // },
+    // service: {
+    //   type: String,
+    //   required: true,
+    // },
+    // loggedIn: {
+    //   type: Boolean,
+    //   default: false,
+    // },
   },
 
   data() {
     return {
-      // Configuration
-      resultsPerPage: 10,
-      isHighlighted: false, // Has the current SERP been enhaced with trusted results signs
+      resultsPerPage: global.sdcConfig.get('components.confiance.resultsPerPage'),
+      maxResults: global.sdcConfig.get('components.confiance.maxResults'),
 
-      results: [],
-      pendingRequest: false,
+      searchWords: '',
+
+      trusted: [], // The trusted results
+
       currentPage: 1,
 
-      searchUrls: [],
-      //countSearches: 0
+      pendingRequest: false,
+
+      se: {
+        resultsCount: 0, // The search engine results
+        start: 0,
+        index: 0,
+        maxResultsPerRequest: 0,
+        maxResults: 0,
+        noMoreResults: false,
+      },
     };
   },
 
   computed: {
-    isCantine: function() {
-      return this.$SE.getgetSearchWords() == 'cantine paris 13';
+    // isCantine: function() {
+    //   return this.$SE.getgetSearchWords() == 'cantine paris 13';
+    // },
+
+    // cantineImg: function() {
+    //   return helpers.asset('img/CaisseEcoles13eme.jpg');
+    // },
+
+    title: function() {
+      return `Sources de Confiance - ${this.trusted.length} sur les ${this.se.resultsCount} premiers résultats de ${helpers.capitalize(this.$SE.name)}`;
     },
 
-    cantineImg: function() {
-      return helpers.asset('img/CaisseEcoles13eme.jpg');
-    },
-
-    isActive: function() {
-      return this.status == 'active';
-    },
-
-    resultsCount: function() {
-      return this.results.length;
+    sdcLogo: function() {
+      return helpers.asset('icons/sdc-24.png');
     },
 
     /**
@@ -117,7 +127,7 @@ export default {
      */
     currentResults: function() {
       var start = (this.currentPage - 1) * this.resultsPerPage;
-      return this.results.slice(start, start + this.resultsPerPage);
+      return this.trusted.slice(start, start + this.resultsPerPage);
     },
 
     /**
@@ -126,6 +136,7 @@ export default {
      * @return     boolean
      */
     pageIncomplete: function() {
+      //console.log(`>${this.$options.name}@pageIncomplete`);
       return this.currentResults.length < this.resultsPerPage;
     },
 
@@ -135,40 +146,43 @@ export default {
      * @return     {<type>}  { description_of_the_return_value }
      */
     allFetched: function() {
-      return this.searchUrls.length ? false : true;
+      //console.log(`>${this.$options.name}@allFetched`);
+      return this.se.resultsCount >= this.se.maxResults || this.se.noMoreResults;
     },
 
     waitingFoResults: function() {
-      return this.pendingRequest || (this.pageIncomplete && !this.allFetched);
+      //console.log(`>${this.$options.name}@waitingFoResults`);
+      return this.pendingRequest;
+      //return this.pendingRequest || (this.pageIncomplete && !this.allFetched);
     },
   },
 
   watch: {
-    visible: function(val) {
-      console.log('>visible: ' + val + ' service=' + this.service);
-      this.moreResults();
-    },
+    // active: function(val, oldval) {
+    //   console.log('>' + this.$options.name + '@active changed from ' + oldval + ' to ' + val);
+    //   //this.moreResults();
+    // },
+  },
 
-    status: function(val, oldval) {
-      console.log('>status: ' + val + ' service=' + this.service);
-      this.moreResults();
-    },
+  beforeMount: function() {
+    console.log('>' + this.$options.name + '@beforeMount');
   },
 
   mounted: function() {
-    console.log('>Confiance component mounted');
+    console.log('>Confiance@mounted');
 
-    // Register this service in the comms helper
-    comms.register(this.service, this.fromBackground);
+    // Settings for the current search engine
+    this.se.maxResultsPerRequest = global.sdcConfig.get('search_engines')[this.$SE.name].maxResultsPerRequest;
+    this.se.maxResults = global.sdcConfig.get('search_engines')[this.$SE.name].maxResults;
 
-    // Get the searchUrls for this query
-    if (this.getSearchWords) {
-      console.log('using search words: ' + this.getSearchWords);
-      this.searchUrls = this.$SE.createSearchLinks(this.getSearchWords);
-    } else this.searchUrls = this.$SE.getSearchLinks();
+    // The current search words
+    this.searchWords = this.$SE.getSearchWords();
+
+    // What is the index of the curent results
+    this.se.start = this.$SE.getCurrentResultIndex();
 
     // Process the results in the SERP, highlight them and add them to the Web panel
-    if (this.useSERP) this.firstResults();
+    this.firstResults();
   },
 
   methods: {
@@ -176,21 +190,45 @@ export default {
      * firstResults - categorize results we have received from the first SERP
      */
     firstResults: function() {
-      console.log('>firstResults');
+      console.log('>' + this.$options.name + '@firstResults for ' + this.$SE.name);
 
-      // -- Process the SERP
       // Extract all results
-      var seResults = this.$SE.extractFromSERP(document);
+      var seResults = this.$SE.scrape(document);
 
       // Pass them to SdC API
       console.assert(!this.pendingRequest, 'pendingRequest should not be true');
       this.pendingRequest = true;
-      comms.toBackground(this.service, {
-        searchengine: this.$SE.name,
-        type: 'CATEGORIZE',
-        request: this.$SE.getgetSearchWords(),
-        results: seResults,
-      });
+      comms
+        .toBackground('sdc', {
+          searchengine: this.$SE.name,
+          type: 'CATEGORIZE',
+          request: this.searchWords,
+          results: seResults,
+        })
+        .then(
+          m => {
+            console.log('>CATEGORIZE: got ' + m.payload.results.length + ' results');
+
+            this.se.resultsCount = m.payload.results.length;
+
+            var newResults = m.payload.results.filter(result => result.status == 'trusted');
+            this.trusted = this.trusted.concat(newResults);
+
+            this.pendingRequest = false;
+
+            // We now have categorized results from first SERP - signal it to parent
+            this.$emit('categorized', newResults);
+
+            if (this.se.start == 0)
+              // If current SERP is the first search page
+              this.se.index = this.se.start + this.se.resultsCount;
+            // Next results are after this page
+            else this.se.index = 0; // Next results are before this page
+
+            //this.moreResults();
+          },
+          e => console.assert(false, 'CATEGORIZE error: ' + e)
+        );
 
       console.log('<firstResults');
     },
@@ -199,79 +237,93 @@ export default {
      * moreResults - search for additional results if needed
      */
     moreResults: function() {
-      console.log('>moreResults: this.visible=' + this.visible + ', this.isActive=' + this.isActive);
+      console.log('>' + this.$options.name + '@moreResults');
 
       if (this.pendingRequest) {
-        console.log('Request already pending');
+        console.log('Request already pending. Moving on.');
         return;
       }
 
       // We only get results when we're displayed (visible and tab is selected)
-      if (!(this.visible && this.isActive)) {
-        console.log('skipping');
-        return;
-      }
+      // if (!this.active) {
+      //   console.log("skipping - we're not active");
+      //   return;
+      // }
 
       // Do we need more results for this page ? Can we get more (not all fetched)?
-      if (this.pageIncomplete && !this.allFetched) {
-        console.log('need more results.');
-        var searchUrl = this.getNextSearchUrl();
-        console.log('requesting ' + searchUrl);
-
-        console.assert(!this.pendingRequest, 'pendingRequest should not be true');
-        this.pendingRequest = true;
-        comms.toBackground(this.service, {
-          searchengine: this.$SE.name,
-          type: 'GET_SERP',
-          searchUrl: searchUrl,
-        });
-      } else console.log('page complete');
-    },
-
-    /**
-     * fromBackground
-     *
-     * @param      object  msg     The message
-     */
-    fromBackground: function(msg) {
-      console.log('>Web:fromBackground service=' + this.service + ' msg.type=' + msg.type);
-
-      // The pending request is now completed
-      this.pendingRequest = false;
-
-      if (msg.status == 'error') {
-        console.log(msg.error);
+      if (!(this.pageIncomplete && !this.allFetched)) {
+        console.log('page complete');
         return;
       }
 
-      switch (msg.type) {
-        case 'CATEGORIZE':
-          // Extract the filtered results (they're now visible in the Web panel)
-          var newResults = msg.results.filter(result => result.status == 'trusted');
-          this.results = this.results.concat(newResults);
+      console.log('need more results.');
 
-          // Signal panel that we have new results so that they can be highlited in SERP
-          this.$emit('trustedresults', this.results, !this.allFetched);
+      // Create next search Url
+      var num = Math.min(this.se.maxResultsPerRequest, this.se.maxResults - this.se.resultsCount);
+      var searchUrl = this.$SE.buildSearchUrl(this.searchWords, this.se.index, num);
+      console.log('requesting ' + searchUrl);
 
-          this.moreResults();
+      console.assert(!this.pendingRequest, 'pendingRequest should not be true');
+      this.pendingRequest = true;
 
-          break;
+      comms
+        .toBackground(this.$SE.name, {
+          //searchengine: this.$SE.name,
+          type: 'GET_RESULTS',
+          searchUrl: searchUrl,
+        })
+        .then(
+          msg => {
+            console.log(msg);
+            this.pendingRequest = false;
 
-        case 'GET_SERP':
-          // Pass them to SdC API
-          console.assert(!this.pendingRequest, 'pendingRequest should not be true');
-          this.pendingRequest = true;
-          comms.toBackground(this.service, {
-            searchengine: this.$SE.name,
-            type: 'CATEGORIZE',
-            request: this.$SE.getgetSearchWords(),
-            results: msg.results,
-          });
-      }
-    },
+            console.log('got ' + msg.results.length + ' more results.');
 
-    getNextSearchUrl: function() {
-      return this.searchUrls.shift();
+            if (!msg.results.length) this.se.noMoreResults = true;
+
+            console.log('se.index=' + this.se.index);
+            this.se.index += msg.results.length;
+            console.log('se.index=' + this.se.index);
+
+            if (this.allFetched) {
+              console.log('all fetched');
+              return;
+            }
+
+            this.pendingRequest = true;
+            comms
+              .toBackground('sdc', {
+                searchengine: this.$SE.name,
+                type: 'CATEGORIZE',
+                request: this.searchWords,
+                results: msg.results,
+              })
+              .then(
+                m => {
+                  this.pendingRequest = false;
+
+                  console.log('>CATEGORIZE: got ' + m.payload.results.length + ' results');
+
+                  this.se.resultsCount += m.payload.results.length;
+
+                  var newResults = m.payload.results.filter(result => result.status == 'trusted');
+                  this.trusted = this.trusted.concat(newResults);
+
+                  console.log(this.trusted.length + ' trusted messages found');
+
+                  this.moreResults();
+                },
+                e => {
+                  this.pendingRequest = false;
+                  console.assert(false, 'CATEGORIZE error: ' + e);
+                }
+              );
+          },
+          e => {
+            this.pendingRequest = false;
+            console.assert(false, 'GET_RESULTS error : ' + e);
+          }
+        );
     },
 
     // A pagination button has been pressed: see if we need to add results

@@ -25,6 +25,7 @@ import * as Edutheque from '../search_engines/edutheque';
 
 import * as comms from '../helpers/comms.js';
 import * as helpers from '../helpers/general.js';
+import Events from '../helpers/eventbus.js';
 
 import Result from './Result.vue';
 import Pagination from './Pagination.vue';
@@ -40,16 +41,21 @@ export default {
   },
 
   props: {
-    active: {
-      type: Boolean,
+    name: {
+      type: String,
       required: true,
+    },
+
+    rootClass: {
+      type: String,
+      required: false,
     },
   },
 
   data() {
     return {
-      resultsPerPage: global.sdcConfig.get('search_engines.paris.resultsPerPage'),
-      maxResults: global.sdcConfig.get('search_engines.paris.maxResults'),
+      resultsPerPage: global.sdcConfig.get('search_engines.edutheque.resultsPerPage'),
+      maxResults: global.sdcConfig.get('search_engines.edutheque.maxResults'),
 
       searchWords: '',
 
@@ -103,26 +109,42 @@ export default {
   },
 
   watch: {
-    active: function(val, oldval) {
-      console.log('>' + this.$options.name + '@active changed from ' + oldval + ' to ' + val);
+    // active: function(val, oldval) {
+    //   console.log('>' + this.$options.name + '@active changed from ' + oldval + ' to ' + val);
+    //   this.moreResults();
+    // },
+  },
+
+  created: function() {
+    Events.$on('WIDGET_REFRESH', pl => {
+      // Is this for us?
+      if (pl.name != this.name) return;
+
       this.moreResults();
-    },
+    });
   },
 
   beforeMount: function() {
-    console.log('>' + this.$options.name + '@beforeMount');
+    console.log('>' + this.name + '@beforeMount');
   },
 
   mounted: function() {
-    console.log('>' + this.$options.name + '@mounted');
+    console.log('>' + this.name + '@mounted');
 
     // Settings for the current search engine
     this.se.maxResultsPerRequest = global.sdcConfig.get('search_engines.edutheque').maxResultsPerRequest;
     this.se.maxResults = global.sdcConfig.get('search_engines.edutheque').maxResults;
-    console.log(this.se.maxResultsPerRequest, this.se.maxResults);
 
     // Get ready for Paris.fr search
     this.searchWords = this.$SE.getSearchWords();
+  },
+
+  beforeDestroy: function() {
+    console.log('>' + this.name + '@beforeDestroy');
+  },
+
+  destroyed: function() {
+    console.log('>' + this.name + '@destroyed');
   },
 
   methods: {
@@ -130,7 +152,7 @@ export default {
      * moreResults - search for additional results if needed
      */
     moreResults: function() {
-      console.log('>' + this.$options.name + '@moreResults');
+      console.log('>' + this.name + '@moreResults');
 
       if (this.pendingRequest) {
         console.log('Request already pending');
@@ -162,7 +184,7 @@ export default {
           })
           .then(
             msg => {
-              console.log('got results back');
+              console.log(`${this.name}: got results back`);
 
               this.pendingRequest = false;
               console.log(msg);

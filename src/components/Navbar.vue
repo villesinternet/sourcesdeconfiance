@@ -7,7 +7,9 @@
       <div class="">
         <ul class="sdc-flex">
           <li v-for="(tab, key) in tabs" :class="tab.status ? 'sdc--mb-px' : ''" class="sdc-mr-1">
-            <button :id="key" v-bind:disabled="isDisabled(tab)" :class="tabClass(tab.status)" v-on:click="$emit('select', key)">{{ tab.title }}</button>
+            <button :id="key" v-bind:disabled="isDisabled(tab)" :class="tabClass(tab.status)" v-on:click="tabSelected(tab)">
+              {{ tab.title }}
+            </button>
           </li>
         </ul>
       </div>
@@ -19,7 +21,8 @@
       <button v-if="loggedIn" class="sdc-bg-transparent sdc-text-blue-700 hover:sdc-text-blue-800">
         Bienvenue JM Ledru
 
-        <img class="sdc-w-12" :src="parisImg()" />
+        <!-- <img class="sdc-w-12" :src="parisImg()" /> -->
+        <img class="sdc-w-12" src="http://www.ac-versailles.fr/favicons/PROFIL_PICTURE_CARRE.ico" />
       </button>
     </div>
 
@@ -49,6 +52,7 @@
 
 <script>
 import * as helpers from '../helpers/general.js';
+import Events from '../helpers/eventbus.js';
 
 import Login from './Login.vue';
 
@@ -97,6 +101,12 @@ export default {
   },
 
   methods: {
+    tabSelected: function(tab) {
+      Events.$emit('TAB_CLICKED', {
+        clickedTab: tab,
+      });
+    },
+
     loginClose: function() {
       this.isLogingIn = false;
     },

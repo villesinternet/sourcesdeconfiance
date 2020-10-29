@@ -41,8 +41,10 @@
     "https://www.google.fr/seach*",
     "https://www.qwant.com/*",
     "https://www.bing.com/search*",
+
     "https://www.paris.fr/recherche*",
-    "https://www.edutheque.fr/*"
+    "https://www.edutheque.fr/*",
+    "https://www.reseau-canope.fr/*"
   ],
   "web_accessible_resources": ["assets/icons/*.png", "assets/logos/*.png"]
 }
