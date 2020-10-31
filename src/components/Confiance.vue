@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="sdc-resize">
     <div class="sdc-rounded-t sdc-bg-gray-400 sdc-p-2 sdc-flex sdc-justify-start sdc-items-center">
       <img class="sdc-pr-1" :src="sdcLogo" />
       <h2>{{ title }}</h2>
@@ -91,7 +91,7 @@ export default {
     // },
 
     title: function() {
-      return `Sources de Confiance - ${this.trusted.length} sur les ${this.se.resultsCount} premiers résultats de ${helpers.capitalize(this.$SE.name)}`;
+      return `Sources de Confiance dans les résultats ${helpers.capitalize(this.$SE.name)} (${this.trusted.length}/${this.se.resultsCount})`;
     },
 
     sdcLogo: function() {
@@ -206,7 +206,10 @@ export default {
             // We now have categorized results from first SERP - signal it to parent
             Events.send('CATEGORIZED_RESULTS', {
               name: this.name,
-              results: newResults,
+              newCategorized: newResults,
+              categorizedCount: this.trusted.length,
+              resultsCount: this.se.resultsCount,
+              moreToCome: !this.allFetched,
             });
 
             if (this.se.start == 0)
@@ -295,6 +298,15 @@ export default {
 
                   var newResults = m.payload.results.filter(result => result.status == 'trusted');
                   this.trusted = this.trusted.concat(newResults);
+
+                  // We now have categorized results from first SERP - signal it to parent
+                  Events.send('CATEGORIZED_RESULTS', {
+                    name: this.name,
+                    newCategorized: newResults,
+                    categorizedCount: this.trusted.length,
+                    resultsCount: this.se.resultsCount,
+                    moreToCome: !this.allFetched,
+                  });
 
                   console.log(this.trusted.length + ' trusted messages found');
 

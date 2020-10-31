@@ -1,7 +1,7 @@
 <template>
   <div class="sdc-flex">
     <div v-for="widget in widgets" class="sdc-mr-2" :class="widget.rootClass">
-      <component :key="widget.name" :is="widget.component" :name="widget.name" :prefs="widget.prefs" />
+      <component :is="widget.component" :name="widget.name" :prefs="widget.prefs" />
     </div>
   </div>
 </template>

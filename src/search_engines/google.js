@@ -28,15 +28,15 @@ export function scrape(doc) {
 
   for (var i = 0; i < elements.length; i++) {
     var url = elements[i].getElementsByTagName('a')[0];
-    var name = elements[i].getElementsByTagName('h3')[0];
+    var title = elements[i].getElementsByTagName('h3')[0];
     var snippet = elements[i].children[1];
-    console.assert(name, 'Could not find the name');
+    console.assert(title, 'Could not find the name');
     console.assert(url, 'Could not find the url');
     console.assert(snippet, 'Could not find the snippet');
     results.push({
       id: i,
       url: url ? url.href : '',
-      name: name ? name.textContent : '',
+      title: title ? title.textContent : '',
       snippet: snippet ? snippet.textContent : '',
     });
   }
@@ -321,7 +321,7 @@ export function injectMenuItem(signalFrame) {
 //}
 export function highlight(enrichedResults) {
   console.log(`>${name}@highlight`);
-  const results = document.getElementsByClassName('rc');
+  const results = document.getElementsByClassName('g');
 
   var firstFound = false;
 

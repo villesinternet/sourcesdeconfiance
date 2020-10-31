@@ -119,7 +119,10 @@
             "component": "Paris",
             "rootClass": "sdc-w-1/3",
             "prefs": {
-              "resultsPerPage": 10
+              "resultsPerPage": 10,
+              "showUrl": false,
+              "showTitle": true,
+              "showSnippet": false
             }
           }
         }

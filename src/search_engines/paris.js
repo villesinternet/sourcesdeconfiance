@@ -25,7 +25,7 @@ export function scrape(results) {
     scraped.push({
       id: i,
       url: 'https://www.paris.fr' + results.hits[i].path,
-      name: results.hits[i].title,
+      title: results.hits[i].title,
       snippet: results.hits[i].lead_text,
       image: results.hits[i].image,
     });

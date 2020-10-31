@@ -34,6 +34,8 @@ export default {
 
   data() {
     return {
+      title: global.sdcConfig.get('se_widgets.toolbar.title'),
+
       isHighlighted: false,
 
       active: false,
@@ -50,9 +52,9 @@ export default {
   },
 
   computed: {
-    title: function() {
-      return global.sdcConfig.get('se_widgets.toolbar.title');
-    },
+    // title: function() {
+    //   return global.sdcConfig.get('se_widgets.toolbar.title');
+    // },
 
     mainLogo: function() {
       return helpers.asset('logos/sdc-gray-text.png');
@@ -110,7 +112,8 @@ export default {
 
     Events.listen('CATEGORIZED_RESULTS', pl => {
       console.log('CATEGORIZED_RESULTS from ' + pl.name);
-      this.categorized(pl.results);
+      this.categorized(pl.newCategorized);
+      this.refreshTabTitle(pl.categorizedCount, pl.resultsCount, pl.moreToCome);
     });
   },
 
@@ -156,30 +159,19 @@ export default {
       });
     },
 
-    // selectTab: function(tabId) {
-    //   console.log('>selectTab: tabId= ' + tabId);
-    //   for (const prop in this.tabs) {
-    //     if (this.tabs[prop].status == 'disabled') continue;
-    //     if (prop == tabId) this.tabs[prop].status = 'active';
-    //     else this.tabs[prop].status = 'inactive';
-    //   }
-    //   this.activeTab = this.tabs[tabId];
-
-    // },
-
     prepareUX: function() {
       console.log('>prepareUX');
 
       this.$SE.injectMenuItem(this.panelClicked);
 
       // Set title
-      this.refreshTab(this.title, 0, true);
+      this.refreshTabTitle(0, 0, false);
     },
 
     // Refresh tab's title
-    refreshTab: function(title, resultsCount, moretoCome) {
-      console.log('>refreshTab');
-      var t = title + (resultsCount ? ' (' + resultsCount + (moretoCome ? '+' : '') + ')' : '');
+    refreshTabTitle: function(categorizedCount, resultsCount, moreToCome) {
+      console.log('>refreshTabTitle');
+      var t = `${this.title} (${categorizedCount}${moreToCome ? '+' : ''}/${resultsCount})`;
       this.$SE.refreshTitle(t);
     },
 
@@ -198,18 +190,18 @@ export default {
      *
      * @param      array  results  Enriched results from categorization
      */
-    trustedResults: function(results, moretoCome) {
-      console.log('>trustedResults');
+    // trustedResults: function(results, moretoCome) {
+    //   console.log('>trustedResults');
 
-      if (!this.isHighlighted) {
-        this.$SE.highlight(results);
-        this.isHighlighted = true;
-      }
+    //   if (!this.isHighlighted) {
+    //     this.$SE.highlight(results);
+    //     this.isHighlighted = true;
+    //   }
 
-      //this.trustedResultsCount = results.length;
+    //   //this.trustedResultsCount = results.length;
 
-      this.refreshTab(this.title, results.length, moretoCome);
-    },
+    //   this.refreshTabTitle(results.length, moretoCome);
+    // },
 
     // prepareSearch: function() {
     //   console.log('>prepareSearch');

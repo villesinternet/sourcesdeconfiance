@@ -12,7 +12,7 @@
 
         <div class="sdc-flex">
           <div class="sdc-pr-2 sdc-overflow-hidden">
-            <Result v-for="result in results" :key="result.url" :result="result" class="sdc-pb-3" />
+            <Result v-for="result in results" :key="result.url" :result="result" class="sdc-pb-3" :showUrl="prefs.showUrl" :showSnippet="prefs.showSnippet" />
           </div>
         </div>
       </div>

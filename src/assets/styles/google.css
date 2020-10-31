@@ -39,10 +39,10 @@ a#sdc:before {
   border: 1px solid #34a853;
   border-radius: 8px;
   box-shadow: none;
-  width: 668px;
+  width: 652px;
 }
 .trustedfirst cite {
-  padding-left: 16px;
+  /*padding-left: 16px;*/
   color: #34a853;
 }
 .trustedfirst:before {
