@@ -15,12 +15,12 @@ function getSerp(storedSettings) {
   //console.log('>getSerp');
   if (storedSettings.extensionswitch != 'off') {
     //if extension is switched on, proceed
-    // const resultslist = document.getElementsByClassName('g');
+    // const resultslist = document.getElementsByClassName();
     // const querystring = document.getElementsByName('q')[0].value;
     // var resultjson = [];
     // // fo each result, store id (from array index) and url (from href) in the resultjson array
     // for (var i = 0; i < resultslist.length; i++) {
-    //   var el = resultslist[i].getElementsByClassName('rc'); // test if result has expected child. prevents code from breaking when a special info box occurs.
+    //   var el = resultslist[i].getElementsByClassName(); // test if result has expected child. prevents code from breaking when a special info box occurs.
     //   if (el.length > 0 && !resultslist[i].classList.contains('kno-kp')) {
     //     //quickfix do not analyse knowledge boxes. Could be a specific analysis instead
     //     resultjson.push({
@@ -34,7 +34,7 @@ function getSerp(storedSettings) {
     // }
     //
     const querystring = document.getElementsByName('q')[0].value;
-    const rcs = document.getElementsByClassName('rc');
+    const rcs = document.getElementsByClassName('g');
     //console.log(rcs.length);
     var resultjson = [];
     for (var i = 0; i < rcs.length; i++) {
@@ -78,8 +78,8 @@ browser.runtime.onMessage.addListener(handleMessage);
 
 function highlight(enrichedjson) {
   console.log('>highlight');
-  //const resultslist = document.getElementsByClassName('g');
-  const resultslist = document.getElementsByClassName('rc');
+  //const resultslist = document.getElementsByClassName();
+  const resultslist = document.getElementsByClassName('g');
   //check if it is the first result page, to apply specific style to the first result entry
   if (window.location.href.indexOf('&start=0') != -1) {
     firstresult = true;
